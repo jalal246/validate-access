@@ -40,6 +40,42 @@ describe("validateAccess", () => {
 
       expect(res).to.deep.equal({ isValid: true, isSrc: true, ext: "js" });
     });
+
+    it("valid json custom entries-src", () => {
+      const filePath = resolve(source, "valid-json-entries-src");
+
+      const res = validateAccess({
+        dir: filePath,
+        isValidateEntry: true,
+        entry: "a"
+      });
+
+      expect(res).to.deep.equal({ isValid: true, isSrc: true, ext: "js" });
+    });
+
+    it("valid json custom entries-src different ext", () => {
+      const filePath = resolve(source, "valid-json-entries-src");
+
+      const res = validateAccess({
+        dir: filePath,
+        isValidateEntry: true,
+        entry: "b"
+      });
+
+      expect(res).to.deep.equal({ isValid: true, isSrc: true, ext: "ts" });
+    });
+
+    it("valid json custom entries-lib different ext", () => {
+      const filePath = resolve(source, "valid-json-entry-lib");
+
+      const res = validateAccess({
+        dir: filePath,
+        isValidateEntry: true,
+        srcName: "lib"
+      });
+
+      expect(res).to.deep.equal({ isValid: true, isSrc: true, ext: "js" });
+    });
   });
 
   describe("invalid", () => {
