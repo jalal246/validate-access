@@ -7,7 +7,7 @@ const { resolve } = require("path");
  *
  * @param {string} dir - project directory
  * @param {string} entry - project file entry name
- * @returns {string} extension.
+ * @returns {string|undefined} extension if exist
  */
 function getFileExtension(dir, entry) {
   const files = fs.readdirSync(dir);
@@ -16,11 +16,14 @@ function getFileExtension(dir, entry) {
     return file.includes(entry);
   });
 
-  if (!indx) {
-    console.error(`getFileExtension: Unable to detect extension In: ${dir}`);
-  }
+  let extension;
 
-  const extension = indx.split(".").pop();
+  /**
+   * If not found, then will throw error when split.
+   */
+  if (indx !== undefined) {
+    extension = indx.split(".").pop();
+  }
 
   return extension;
 }
@@ -47,12 +50,10 @@ function validateAccess({
 }) {
   const pkgJsonPath = resolve(dir, "package.json");
 
-  const isPkgJson = fs.existsSync(pkgJsonPath);
+  let isValid = fs.existsSync(pkgJsonPath);
 
-  let isValid = true;
-
-  if (!isPkgJson) {
-    return { isValid: false };
+  if (!isValid) {
+    return { isValid };
   }
 
   let isSrc;
@@ -71,9 +72,16 @@ function validateAccess({
 
     ext = getFileExtension(src, entry);
 
-    const entryPath = resolve(src, `${entry}.${ext}`);
+    /**
+     * Make sure there's valid extension. Otherwise, no point for checking.
+     */
+    if (ext) {
+      const entryPath = resolve(src, `${entry}.${ext}`);
 
-    isValid = fs.existsSync(entryPath);
+      isValid = fs.existsSync(entryPath);
+    } else {
+      isValid = false;
+    }
   }
 
   return { isValid, ext, isSrc };
