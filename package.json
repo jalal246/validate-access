@@ -1,10 +1,39 @@
 {
   "name": "validate-access",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "0.0.0",
+  "main": "src/index.js",
   "author": "Jalal Maskoun <jimmy002020@gmail.com>",
-  "license": "LGPL-3.0",
+  "license": "GPL-3.0",
   "scripts": {
     "test": "mocha"
-  }
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "keywords": [
+    "validate-access",
+    "validate",
+    "validator",
+    "path",
+    "fs",
+    "node",
+    "file",
+    "directory",
+    "recursive",
+    "read",
+    "fileSystem",
+    "filter",
+    "builderz",
+    "get-info",
+    "package-sorter",
+    "corename",
+    "mytools",
+    "move-position",
+    "folo",
+    "dflex",
+    "textics",
+    "utility",
+    "tools"
+  ]
 }
