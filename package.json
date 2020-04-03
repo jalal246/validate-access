@@ -1,6 +1,6 @@
 {
   "name": "validate-access",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "main": "src/index.js",
   "author": "Jalal Maskoun <jimmy002020@gmail.com>",
   "license": "GPL-3.0",
