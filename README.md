@@ -1,6 +1,6 @@
 # validate-access
 
-> Validate project accessability files
+> Validate project accessibility files
 
 ```bash
 npm install validate-access
@@ -48,12 +48,12 @@ const { isValid, isSrc, ext } = validateAccess({
 
 ### getFileExtension
 
-`getFileExtension` is used internally by `validateAccess` however it is exproted
+`getFileExtension` is used internally by `validateAccess` however it is exported
 for further use.
 
 ```js
 /**
- * Gets extension used in for given entry. 
+ * Gets extension used in for given entry
  *
  * @param {string} dir - project directory
  * @param {string} entry - project file entry name
