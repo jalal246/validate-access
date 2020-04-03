@@ -1,6 +1,6 @@
 # validate-access
 
-> Function validate project accessability
+> Validate project accessability files
 
 ```bash
 npm install validate-access
@@ -8,9 +8,11 @@ npm install validate-access
 
 ## API
 
+### validateAccess
+
 ```js
 /**
- * Validates access readability  for `package.json` and project entry if
+ * Validates access for `package.json` and project entry if
  * provided.
  *
  * @param {string} [dir="."] - project directory
@@ -31,7 +33,7 @@ function validateAccess({
 })
 ```
 
-### Example
+### Example(1)
 
 ```js
 import { validateAccess } from "validate-access";
@@ -42,6 +44,32 @@ const { isValid, isSrc, ext } = validateAccess({
 });
 
 // { isValid: true, isSrc: true, ext: js }
+```
+
+### getFileExtension
+
+`getFileExtension` is used internally by `validateAccess` however it is exproted
+for further use.
+
+```js
+/**
+ * Gets extension used in for given entry. 
+ *
+ * @param {string} dir - project directory
+ * @param {string} entry - project file entry name
+ * @returns {string|undefined} extension if exist
+ */
+function getFileExtension(dir, entry)
+```
+
+### Example(2)
+
+```js
+import { validateAccess } from "validate-access";
+
+const extension = getFileExtension("path/to/valid", "index");
+
+// extension > js
 ```
 
 ### Related projects
