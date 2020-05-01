@@ -58,14 +58,14 @@ function validateAccess({
   }
 
   /**
+   * Let's see where files life in src or flat.
+   */
+  isSrc = fs.existsSync(resolve(dir, srcName));
+
+  /**
    * Valid package.json and isValidateEntry is required.
    */
   if (isValidateEntry) {
-    /**
-     * Let's see where files life in src or flat.
-     */
-    isSrc = fs.existsSync(resolve(dir, srcName));
-
     const src = isSrc ? resolve(dir, srcName) : dir;
 
     ext = getFileExtension(src, entry);
