@@ -14,8 +14,8 @@ describe("validateAccess", () => {
 
       expect(res).to.deep.equal({
         isValid: true,
-        isSrc: undefined,
-        ext: undefined
+        isSrc: false,
+        ext: null,
       });
     });
 
@@ -24,7 +24,7 @@ describe("validateAccess", () => {
 
       const res = validateAccess({
         dir: filePath,
-        isValidateEntry: true
+        isValidateEntry: true,
       });
 
       expect(res).to.deep.equal({ isValid: true, isSrc: false, ext: "js" });
@@ -35,7 +35,7 @@ describe("validateAccess", () => {
 
       const res = validateAccess({
         dir: filePath,
-        isValidateEntry: true
+        isValidateEntry: true,
       });
 
       expect(res).to.deep.equal({ isValid: true, isSrc: true, ext: "js" });
@@ -47,7 +47,7 @@ describe("validateAccess", () => {
       const res = validateAccess({
         dir: filePath,
         isValidateEntry: true,
-        entry: "a"
+        entry: "a",
       });
 
       expect(res).to.deep.equal({ isValid: true, isSrc: true, ext: "js" });
@@ -59,7 +59,7 @@ describe("validateAccess", () => {
       const res = validateAccess({
         dir: filePath,
         isValidateEntry: true,
-        entry: "b"
+        entry: "b",
       });
 
       expect(res).to.deep.equal({ isValid: true, isSrc: true, ext: "ts" });
@@ -71,7 +71,7 @@ describe("validateAccess", () => {
       const res = validateAccess({
         dir: filePath,
         isValidateEntry: true,
-        srcName: "lib"
+        srcName: "lib",
       });
 
       expect(res).to.deep.equal({ isValid: true, isSrc: true, ext: "js" });
@@ -91,13 +91,13 @@ describe("validateAccess", () => {
 
       const res = validateAccess({
         dir: filePath,
-        isValidateEntry: true
+        isValidateEntry: true,
       });
 
       expect(res).to.deep.equal({
         isValid: false,
         isSrc: false,
-        ext: undefined
+        ext: null,
       });
     });
 
@@ -106,13 +106,13 @@ describe("validateAccess", () => {
 
       const res = validateAccess({
         dir: filePath,
-        isValidateEntry: true
+        isValidateEntry: true,
       });
 
       expect(res).to.deep.equal({
         isValid: false,
-        isSrc: true,
-        ext: undefined
+        isSrc: false,
+        ext: null,
       });
     });
   });
