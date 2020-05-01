@@ -7,25 +7,23 @@ const { resolve } = require("path");
  *
  * @param {string} dir - project directory
  * @param {string} entry - project file entry name
- * @returns {string|undefined} extension if exist
+ * @returns {string|null} extension if exist
  */
 function getFileExtension(dir, entry) {
   const files = fs.readdirSync(dir);
 
-  const indx = files.find(file => {
+  const fullEntryName = files.find((file) => {
     return file.includes(entry);
   });
-
-  let extension;
 
   /**
    * If not found, then will throw error when split.
    */
-  if (indx !== undefined) {
-    extension = indx.split(".").pop();
+  if (fullEntryName && fullEntryName.length > 0) {
+    return fullEntryName.split(".").pop();
   }
 
-  return extension;
+  return null;
 }
 
 /**
@@ -46,28 +44,28 @@ function validateAccess({
   dir = ".",
   isValidateEntry = false,
   entry = "index",
-  srcName = "src"
+  srcName = "src",
 }) {
   const pkgJsonPath = resolve(dir, "package.json");
 
   let isValid = fs.existsSync(pkgJsonPath);
 
+  let isSrc = null;
+  let ext = null;
+
   if (!isValid) {
-    return { isValid };
+    return { isValid, isSrc, ext };
   }
 
-  let isSrc;
-  let ext;
+  /**
+   * Let's see where files life in src or flat.
+   */
+  isSrc = fs.existsSync(resolve(dir, srcName));
 
   /**
    * Valid package.json and isValidateEntry is required.
    */
   if (isValidateEntry) {
-    /**
-     * Let's see where files life in src or flat.
-     */
-    isSrc = fs.existsSync(resolve(dir, srcName));
-
     const src = isSrc ? resolve(dir, srcName) : dir;
 
     ext = getFileExtension(src, entry);
@@ -89,5 +87,5 @@ function validateAccess({
 
 module.exports = {
   getFileExtension,
-  validateAccess
+  validateAccess,
 };
