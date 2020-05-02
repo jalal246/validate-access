@@ -30,24 +30,21 @@ function getFullName(name, ext) {
   return `${name}.${ext}`;
 }
 
-function checkFile(root, fname) {
-  const cwd = resolve(root, fname);
+function checkFile(dir, fname) {
+  const cwd = resolve(dir, fname);
 
   return fs.existsSync(cwd);
 }
 
-function validateEntry(root, srcPath, entryFile) {
+function validateEntry(srcPath, entryFile) {
   const entryExt = getFileExtension(srcPath, entryFile);
 
-  return entryExt
-    ? {
-        entryExt,
-        isEntryValid: checkFile(root, getFullName(entryFile, entryExt)),
-      }
-    : {
-        entryExt,
-        isEntryValid: false,
-      };
+  const isEntryValid = checkFile(srcPath, getFullName(entryFile, entryExt));
+
+  return {
+    entryExt: isEntryValid ? entryExt : null,
+    isEntryValid,
+  };
 }
 
 /**
@@ -86,7 +83,7 @@ function validateAccess({ dir = ".", entry = "index", srcName = "src" }) {
     entries.forEach((entryFile, i) => {
       isValidEntry.push({
         entry: entries[i],
-        ...validateEntry(dir, srcPath, entryFile),
+        ...validateEntry(srcPath, entryFile),
       });
     });
   }
