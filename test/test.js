@@ -13,7 +13,7 @@ describe("validateAccess", () => {
       const res = validateAccess({ dir: filePath });
 
       expect(res).to.deep.equal({
-        isValid: true,
+        isValidJson: true,
         isSrc: false,
         ext: null,
       });
@@ -27,7 +27,7 @@ describe("validateAccess", () => {
         isValidateEntry: true,
       });
 
-      expect(res).to.deep.equal({ isValid: true, isSrc: false, ext: "js" });
+      expect(res).to.deep.equal({ isValidJson: true, isSrc: false, ext: "js" });
     });
 
     it("valid json entries-src", () => {
@@ -38,7 +38,7 @@ describe("validateAccess", () => {
         isValidateEntry: true,
       });
 
-      expect(res).to.deep.equal({ isValid: true, isSrc: true, ext: "js" });
+      expect(res).to.deep.equal({ isValidJson: true, isSrc: true, ext: "js" });
     });
 
     it("valid json custom entries-src", () => {
@@ -50,7 +50,7 @@ describe("validateAccess", () => {
         entry: "a",
       });
 
-      expect(res).to.deep.equal({ isValid: true, isSrc: true, ext: "js" });
+      expect(res).to.deep.equal({ isValidJson: true, isSrc: true, ext: "js" });
     });
 
     it("valid json custom entries-src different ext", () => {
@@ -62,7 +62,7 @@ describe("validateAccess", () => {
         entry: "b",
       });
 
-      expect(res).to.deep.equal({ isValid: true, isSrc: true, ext: "ts" });
+      expect(res).to.deep.equal({ isValidJson: true, isSrc: true, ext: "ts" });
     });
 
     it("valid json custom entries-lib different ext", () => {
@@ -74,7 +74,7 @@ describe("validateAccess", () => {
         srcName: "lib",
       });
 
-      expect(res).to.deep.equal({ isValid: true, isSrc: true, ext: "js" });
+      expect(res).to.deep.equal({ isValidJson: true, isSrc: true, ext: "js" });
     });
   });
 
@@ -82,8 +82,8 @@ describe("validateAccess", () => {
     it("invalid json", () => {
       const filePath = resolve(source, "invalid-json");
 
-      const { isValid } = validateAccess({ dir: filePath });
-      expect(isValid).to.equal(false);
+      const { isValidJson } = validateAccess({ dir: filePath });
+      expect(isValidJson).to.equal(false);
     });
 
     it("invalid json entries-flat", () => {
@@ -95,7 +95,7 @@ describe("validateAccess", () => {
       });
 
       expect(res).to.deep.equal({
-        isValid: false,
+        isValidJson: false,
         isSrc: false,
         ext: null,
       });
@@ -110,7 +110,7 @@ describe("validateAccess", () => {
       });
 
       expect(res).to.deep.equal({
-        isValid: false,
+        isValidJson: false,
         isSrc: false,
         ext: null,
       });
