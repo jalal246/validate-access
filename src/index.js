@@ -26,12 +26,35 @@ function getFileExtension(dir, entry) {
   return null;
 }
 
+function getFullName(name, ext) {
+  return `${name}.${ext}`;
+}
+
+function checkFile(root, fname) {
+  const cwd = resolve(root, fname);
+
+  return fs.existsSync(cwd);
+}
+
+function validateEntry(root, srcPath, entryFile) {
+  const entryExt = getFileExtension(srcPath, entryFile);
+
+  return entryExt
+    ? {
+        entryExt,
+        isEntryValid: checkFile(root, getFullName(entryFile, entryExt)),
+      }
+    : {
+        entryExt,
+        isEntryValid: false,
+      };
+}
+
 /**
  * Validates access readability  for `package.json` and project entry if
  * provided.
  *
  * @param {string} [dir="."]
- * @param {boolean} [isValidateEntry=false]
  * @param {string} [entry="index"]
  * @param {string} [srcName="src"]
  *
@@ -40,49 +63,39 @@ function getFileExtension(dir, entry) {
  * @returns {boolean} result.isSrc - true, if project contains src folder
  * @returns {string} result.ext - entry file extension
  */
-function validateAccess({
-  dir = ".",
-  isValidateEntry = false,
-  entry = "index",
-  srcName = "src",
-}) {
-  const pkgJsonPath = resolve(dir, "package.json");
-
-  let isValid = fs.existsSync(pkgJsonPath);
+function validateAccess({ dir = ".", entry = "index", srcName = "src" }) {
+  const isValidJson = checkFile(dir, "package.json");
 
   let isSrc = null;
-  let ext = null;
-
-  if (!isValid) {
-    return { isValid, isSrc, ext };
-  }
 
   /**
    * Let's see where files life in src or flat.
    */
   isSrc = fs.existsSync(resolve(dir, srcName));
 
+  const isValidEntry = [];
+
   /**
    * Valid package.json and isValidateEntry is required.
    */
-  if (isValidateEntry) {
-    const src = isSrc ? resolve(dir, srcName) : dir;
+  if (entry) {
+    const srcPath = isSrc ? resolve(dir, srcName) : dir;
 
-    ext = getFileExtension(src, entry);
+    const entries = typeof entry === "string" ? [entry] : entry;
 
-    /**
-     * Make sure there's valid extension. Otherwise, no point for checking.
-     */
-    if (ext) {
-      const entryPath = resolve(src, `${entry}.${ext}`);
-
-      isValid = fs.existsSync(entryPath);
-    } else {
-      isValid = false;
-    }
+    entries.forEach((entryFile, i) => {
+      isValidEntry.push({
+        entry: entries[i],
+        ...validateEntry(dir, srcPath, entryFile),
+      });
+    });
   }
 
-  return { isValid, ext, isSrc };
+  return {
+    isValidJson,
+    isSrc,
+    ...(isValidEntry.length === 1 ? { ...isValidEntry[0] } : { isValidEntry }),
+  };
 }
 
 module.exports = {
