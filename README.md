@@ -10,40 +10,80 @@ npm install validate-access
 
 ### validateAccess
 
+Validates package accessibility including package.json and entry/entries.
+
 ```js
-/**
- * Validates access for `package.json` and project entry if
- * provided.
- *
- * @param {string} [dir="."] - project directory
- * @param {boolean} [isValidateEntry=false] - if false, it only validate `package.json`
- * @param {string} [entry="index"]
- * @param {string} [srcName="src"]
- *
- * @returns {Object} result
- * @returns {boolean} result.isValid - true, if access is valid
- * @returns {boolean} result.isSrc - true, if project contains src folder
- * @returns {string} result.ext - entry file extension
- */
-function validateAccess({
-  dir,
-  isValidateEntry,
-  entry,
-  srcName
+validateAccess({
+dir?: string,
+entry?: string|Array,
+srcName? :string
 })
 ```
 
-### Example(1)
+The result object depends on input. for one entry:
+
+- `isJsonValid: boolean` - true if dir has package.json
+- `isSrc: boolean` - true if there's src folder.
+- `isEntryValid: boolean` - if given entry is exist.
+- `entry: string` - entry name.
+- `entryExt: string|null` - entry extension if exist.
+
+And for multi entries:
+
+- `isJsonValid` and `isSrc` (same as above).
+- `isEntryValid: Array <entryValidateInfo>`
+  - `entry: string` - entry name.
+  - `isEntryValid: boolean` - true if entry is valid.
+  - `entryExt: string|null` - entry extension if exist.
+
+### Example - One Entry
 
 ```js
 import { validateAccess } from "validate-access";
 
-const { isValid, isSrc, ext } = validateAccess({
-  dir: "path/to/valid",
-  isValidateEntry: true
+// ├───package.json
+// ├───src
+// │   ├───index.js
+// │   └───foo.js
+const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
+  dir: "path/to/valid/package",
 });
 
-// { isValid: true, isSrc: true, ext: js }
+// { isJsonValid: true, isSrc: true, entry: "index", isEntryValid: true, entryExt: "js" }
+```
+
+### Example - Multi Entries
+
+```js
+import { validateAccess } from "validate-access";
+
+// ├───src
+// │   ├───bar.ts
+// │   └───foo.js
+const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
+  dir: "path/to/valid/package",
+  entry: ["bar", "foo", "foobar"],
+});
+
+// isJsonValid: false,
+// isSrc: true,
+// isEntryValid: [
+//   {
+//     entry: "bar",
+//     entryExt: "ts",
+//     isEntryValid: true,
+//   },
+//   {
+//     entry: "foo",
+//     entryExt: "js",
+//     isEntryValid: true,
+//   },
+//   {
+//     entry: "foobar",
+//     entryExt: null,
+//     isEntryValid: false,
+//   },
+// ],
 ```
 
 ### getFileExtension
@@ -74,10 +114,10 @@ const extension = getFileExtension("path/to/valid", "index");
 
 ### Related projects
 
+- [builderz](https://github.com/jalal246/builderz) - Zero Configuration JS bundler.
+
 - [packageSorter](https://github.com/jalal246/packageSorter) - Sorting packages
   for monorepos production.
-
-- [builderz](https://github.com/jalal246/builderz) - Build your project(s) with zero configuration
 
 - [corename](https://github.com/jalal246/corename) - Extracts package name.
 
