@@ -12,6 +12,7 @@ const { resolve } = require("path");
 function getFileExtension(dir, entry) {
   const files = fs.readdirSync(dir);
 
+  // todo, this must be fixed
   const fullEntryName = files.find((file) => {
     return file.includes(entry);
   });
@@ -61,7 +62,7 @@ function validateEntry(srcPath, entryFile) {
  * @returns {string} result.ext - entry file extension
  */
 function validateAccess({ dir = ".", entry = "index", srcName = "src" }) {
-  const isValidJson = checkFile(dir, "package.json");
+  const isJsonValid = checkFile(dir, "package.json");
 
   let isSrc = null;
 
@@ -70,7 +71,7 @@ function validateAccess({ dir = ".", entry = "index", srcName = "src" }) {
    */
   isSrc = fs.existsSync(resolve(dir, srcName));
 
-  const isValidEntry = [];
+  const isEntryValid = [];
 
   /**
    * Valid package.json and isValidateEntry is required.
@@ -81,7 +82,7 @@ function validateAccess({ dir = ".", entry = "index", srcName = "src" }) {
     const entries = typeof entry === "string" ? [entry] : entry;
 
     entries.forEach((entryFile, i) => {
-      isValidEntry.push({
+      isEntryValid.push({
         entry: entries[i],
         ...validateEntry(srcPath, entryFile),
       });
@@ -89,9 +90,9 @@ function validateAccess({ dir = ".", entry = "index", srcName = "src" }) {
   }
 
   return {
-    isValidJson,
+    isJsonValid,
     isSrc,
-    ...(isValidEntry.length === 1 ? { ...isValidEntry[0] } : { isValidEntry }),
+    ...(isEntryValid.length === 1 ? { ...isEntryValid[0] } : { isEntryValid }),
   };
 }
 

@@ -14,7 +14,7 @@ describe("valid", () => {
     const res = validateAccess({ dir: filePath });
 
     expect(res).to.deep.equal({
-      isValidJson: true,
+      isJsonValid: true,
       isSrc: false,
       entry: "index",
       isEntryValid: false,
@@ -30,7 +30,7 @@ describe("valid", () => {
     });
 
     expect(res).to.deep.equal({
-      isValidJson: true,
+      isJsonValid: true,
       isSrc: false,
       entry: "index",
       isEntryValid: true,
@@ -47,7 +47,7 @@ describe("valid", () => {
     });
 
     expect(res).to.deep.equal({
-      isValidJson: true,
+      isJsonValid: true,
       isSrc: false,
       entry: "b",
       isEntryValid: true,
@@ -64,9 +64,9 @@ describe("valid", () => {
     });
 
     expect(res).to.deep.equal({
-      isValidJson: true,
+      isJsonValid: true,
       isSrc: false,
-      isValidEntry: [
+      isEntryValid: [
         {
           entry: "b",
           entryExt: "ts",
@@ -95,7 +95,7 @@ describe("valid", () => {
     });
 
     expect(res).to.deep.equal({
-      isValidJson: true,
+      isJsonValid: true,
       isSrc: true,
       entry: "b",
       isEntryValid: true,
@@ -112,7 +112,7 @@ describe("valid", () => {
     });
 
     expect(res).to.deep.equal({
-      isValidJson: true,
+      isJsonValid: true,
       isSrc: true,
       entry: "index",
       isEntryValid: true,
