@@ -1,3 +1,5 @@
+/* eslint-disable import/no-extraneous-dependencies */
+
 const { expect } = require("chai");
 const { resolve } = require("path");
 
