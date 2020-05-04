@@ -70,11 +70,9 @@ function getExtension(dir, entry) {
  * @param {string} [dir="."]
  * @param {string} [entry="index"]
  * @param {string} [srcName="src"]
+ * @param {boolean} [isValidateJson=true]
  *
- * @returns {Object} result
- * @returns {boolean} result.isValid - true, if access is valid
- * @returns {boolean} result.isSrc - true, if project contains src folder
- * @returns {string} result.ext - entry file extension
+ * @returns {Object} results
  */
 function validateAccess({
   dir = ".",
