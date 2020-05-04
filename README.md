@@ -45,6 +45,7 @@ import { validateAccess } from "validate-access";
 // ├───src
 // │   ├───index.js
 // │   └───foo.js
+
 const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
   dir: "path/to/valid/package",
 });
@@ -60,6 +61,7 @@ import { validateAccess } from "validate-access";
 // ├───src
 // │   ├───bar.ts
 // │   └───foo.js
+
 const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
   dir: "path/to/valid/package",
   entry: ["bar", "foo", "foobar"],
@@ -86,31 +88,15 @@ const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
 // ],
 ```
 
-### getFileExtension
+## Test
 
-`getFileExtension` is used internally by `validateAccess` however it is exported
-for further use.
-
-```js
-/**
- * Gets extension used in for given entry
- *
- * @param {string} dir - project directory
- * @param {string} entry - project file entry name
- * @returns {string|undefined} extension if exist
- */
-function getFileExtension(dir, entry)
+```sh
+npm test
 ```
 
-### Example(2)
+## License
 
-```js
-import { validateAccess } from "validate-access";
-
-const extension = getFileExtension("path/to/valid", "index");
-
-// extension > js
-```
+This project is licensed under the [GPL-3.0 License](https://github.com/jalal246/validate-access/blob/master/LICENSE)
 
 ### Related projects
 
@@ -126,14 +112,8 @@ const extension = getFileExtension("path/to/valid", "index");
 
 - [get-info](https://github.com/jalal246/get-info) - Utility functions for projects production.
 
-- [textics](https://github.com/jalal246/textics) & [textics-stream](https://github.com/jalal246/textics-stream) - Counts lines, words, chars and spaces for a given string.
+- [textics](https://github.com/jalal246/textics) &
+  [textics-stream](https://github.com/jalal246/textics-stream) - Counts lines,
+  words, chars and spaces for a given string.
 
-## Test
-
-```sh
-npm test
-```
-
-## License
-
-This project is licensed under the [GPL-3.0 License](https://github.com/jalal246/validate-access/blob/master/LICENSE)
+- [folo](https://github.com/jalal246/folo) - Form & Layout Components Built with React.
