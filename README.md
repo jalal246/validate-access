@@ -16,7 +16,8 @@ Validates package accessibility including package.json and entry/entries.
 validateAccess({
 dir?: string,
 entry?: string|Array,
-srcName? :string
+srcName? :string,
+isValidateJson? :boolean
 })
 ```
 
