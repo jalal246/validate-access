@@ -1,3 +1,5 @@
+"use_strict";
+
 /* eslint-disable no-nested-ternary */
 /* eslint-disable no-console */
 const fs = require("fs");
