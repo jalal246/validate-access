@@ -61,7 +61,7 @@ function validateEntry(srcPath, entryFile) {
  * @returns {boolean} result.isSrc - true, if project contains src folder
  * @returns {string} result.ext - entry file extension
  */
-function validateAccess({ dir = ".", entry = "index", srcName = "src" }) {
+function validateAccess({ dir = ".", entry = "index", srcName = "src" } = {}) {
   const isJsonValid = checkFile(dir, "package.json");
 
   let isSrc = null;

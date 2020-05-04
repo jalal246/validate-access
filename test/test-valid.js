@@ -8,6 +8,18 @@ const { validateAccess } = require("../src");
 const source = resolve(__dirname, "fixtures");
 
 describe("valid", () => {
+  it("default ", () => {
+    const res = validateAccess();
+
+    expect(res).to.deep.equal({
+      isJsonValid: true,
+      isSrc: true,
+      entry: "index",
+      isEntryValid: true,
+      entryExt: "js",
+    });
+  });
+
   it("valid json", () => {
     const filePath = resolve(source, "valid-json");
 
