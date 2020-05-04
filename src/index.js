@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 /* eslint-disable no-console */
 const fs = require("fs");
 const { resolve } = require("path");
@@ -75,8 +76,13 @@ function getExtension(dir, entry) {
  * @returns {boolean} result.isSrc - true, if project contains src folder
  * @returns {string} result.ext - entry file extension
  */
-function validateAccess({ dir = ".", entry = "index", srcName = "src" } = {}) {
-  const isJsonValid = isValid(dir, "package.json");
+function validateAccess({
+  dir = ".",
+  entry = "index",
+  srcName = "src",
+  isValidateJson = true,
+} = {}) {
+  const isJsonValid = isValidateJson ? isValid(dir, "package.json") : null;
 
   let isSrc = null;
 
@@ -116,7 +122,11 @@ function validateAccess({ dir = ".", entry = "index", srcName = "src" } = {}) {
   return {
     isJsonValid,
     isSrc,
-    ...(isEntryValid.length === 1 ? { ...isEntryValid[0] } : { isEntryValid }),
+    ...(!entry
+      ? { entry, entryExt: null, isEntryValid: null }
+      : isEntryValid.length === 1
+      ? { ...isEntryValid[0] }
+      : { isEntryValid }),
   };
 }
 
