@@ -3,18 +3,53 @@ const fs = require("fs");
 const { resolve } = require("path");
 
 /**
+ * Gets files in given directory
+ *
+ * @param {string|Array} dir
+ * @returns {Array} - files in directory
+ */
+function getFiles(dir) {
+  return typeof dir === "string" ? fs.readdirSync(dir) : dir;
+}
+
+/**
+ * Gets full name with extension
+ *
+ * @param {string} name
+ * @param {string} ext
+ * @returns {string} - full name
+ */
+function getFullName(name, ext) {
+  return `${name}.${ext}`;
+}
+
+/**
+ * Validates file existence in given directory
+ *
+ * @param {string} dir
+ * @param {string} fname
+ * @returns {boolean} -  true if exists
+ */
+function isValid(dir, fname) {
+  const cwd = resolve(dir, fname);
+
+  return fs.existsSync(cwd);
+}
+
+/**
  * Gets extension used in for given entry.
  *
  * @param {string} dir - project directory
  * @param {string} entry - project file entry name
  * @returns {string|null} extension if exist
  */
-function getFileExtension(dir, entry) {
-  const files = fs.readdirSync(dir);
+function getExtension(dir, entry) {
+  const files = getFiles(dir);
 
-  // todo, this must be fixed
+  const regExp = new RegExp(`^${entry}.[a-z]+$`, "i");
+
   const fullEntryName = files.find((file) => {
-    return file.includes(entry);
+    return regExp.test(file);
   });
 
   /**
@@ -25,27 +60,6 @@ function getFileExtension(dir, entry) {
   }
 
   return null;
-}
-
-function getFullName(name, ext) {
-  return `${name}.${ext}`;
-}
-
-function checkFile(dir, fname) {
-  const cwd = resolve(dir, fname);
-
-  return fs.existsSync(cwd);
-}
-
-function validateEntry(srcPath, entryFile) {
-  const entryExt = getFileExtension(srcPath, entryFile);
-
-  const isEntryValid = checkFile(srcPath, getFullName(entryFile, entryExt));
-
-  return {
-    entryExt: isEntryValid ? entryExt : null,
-    isEntryValid,
-  };
 }
 
 /**
@@ -62,7 +76,7 @@ function validateEntry(srcPath, entryFile) {
  * @returns {string} result.ext - entry file extension
  */
 function validateAccess({ dir = ".", entry = "index", srcName = "src" } = {}) {
-  const isJsonValid = checkFile(dir, "package.json");
+  const isJsonValid = isValid(dir, "package.json");
 
   let isSrc = null;
 
@@ -81,10 +95,20 @@ function validateAccess({ dir = ".", entry = "index", srcName = "src" } = {}) {
 
     const entries = typeof entry === "string" ? [entry] : entry;
 
-    entries.forEach((entryFile, i) => {
+    const dirFiles = getFiles(srcPath);
+
+    entries.forEach((entryFile) => {
+      const entryExt = getExtension(dirFiles, entryFile);
+
+      const isEntryFilesValid = isValid(
+        srcPath,
+        getFullName(entryFile, entryExt)
+      );
+
       isEntryValid.push({
-        entry: entries[i],
-        ...validateEntry(srcPath, entryFile),
+        entry: entryFile,
+        entryExt,
+        isEntryValid: isEntryFilesValid,
       });
     });
   }
@@ -97,6 +121,6 @@ function validateAccess({ dir = ".", entry = "index", srcName = "src" } = {}) {
 }
 
 module.exports = {
-  getFileExtension,
+  getExtension,
   validateAccess,
 };
