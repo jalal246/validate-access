@@ -131,4 +131,39 @@ describe("valid", () => {
       entryExt: "js",
     });
   });
+
+  it("don't validate entry", () => {
+    const filePath = resolve(source, "valid-json-entries-flat");
+
+    const res = validateAccess({
+      dir: filePath,
+      entry: null,
+    });
+
+    expect(res).to.deep.equal({
+      isJsonValid: true,
+      isSrc: false,
+      entry: null,
+      isEntryValid: null,
+      entryExt: null,
+    });
+  });
+
+  it("don't validate json", () => {
+    const filePath = resolve(source, "valid-json-entries-flat");
+
+    const res = validateAccess({
+      dir: filePath,
+      isValidateJson: false,
+      entry: "b",
+    });
+
+    expect(res).to.deep.equal({
+      isJsonValid: null,
+      isSrc: false,
+      entry: "b",
+      isEntryValid: true,
+      entryExt: "ts",
+    });
+  });
 });
