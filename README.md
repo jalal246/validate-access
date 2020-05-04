@@ -53,6 +53,22 @@ const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
 // { isJsonValid: true, isSrc: true, entry: "index", isEntryValid: true, entryExt: "js" }
 ```
 
+### Example - Custom Entry
+
+```js
+import { validateAccess } from "validate-access";
+
+// ├───index.json
+// ├───foo.ts
+
+const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
+  dir: "path/to/valid/package",
+  entry: "foo",
+});
+
+// { isJsonValid: false, isSrc: false, entry: "foo", isEntryValid: true, entryExt: "ts" }
+```
+
 ### Example - Multi Entries
 
 ```js
