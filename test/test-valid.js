@@ -115,6 +115,23 @@ describe("valid", () => {
     });
   });
 
+  it("specific entry non-flat with extension included", () => {
+    const filePath = resolve(source, "valid-json-entries-src");
+
+    const res = validateAccess({
+      dir: filePath,
+      entry: "b.ts",
+    });
+
+    expect(res).to.deep.equal({
+      isJsonValid: true,
+      isSrc: true,
+      entry: "b",
+      isEntryValid: true,
+      entryExt: "ts",
+    });
+  });
+
   it("figures out entries with src included or extensions attached", () => {
     const filePath = resolve(source, "valid-json-entries-src");
 

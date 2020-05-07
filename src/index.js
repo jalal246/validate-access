@@ -121,10 +121,10 @@ function validateAccess({
 
     if (result.isSrc && file.includes("src/")) {
       [, file] = file.split("/");
+    }
 
-      if (file.includes(".")) {
-        [file, entryExt] = file.split(".");
-      }
+    if (file.includes(".")) {
+      [file, entryExt] = file.split(".");
     }
 
     if (!entryExt) {
