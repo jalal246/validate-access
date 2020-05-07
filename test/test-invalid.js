@@ -46,7 +46,7 @@ describe("invalid", () => {
 
     expect(res).to.deep.equal({
       isJsonValid: true,
-      isSrc: true,
+      isSrc: false,
       entry: "index",
       isEntryValid: false,
       entryExt: null,
