@@ -82,62 +82,57 @@ function validateAccess({
   srcName = "src",
   isValidateJson = true,
 } = {}) {
-  const isJsonValid = isValidateJson ? isValid(dir, "package.json") : null;
+  const result = {};
 
-  let isSrc = null;
+  result.isJsonValid = isValidateJson ? isValid(dir, "package.json") : null;
+
+  if (!entry) {
+    return result;
+  }
 
   /**
    * Let's see where files life in src or flat.
    */
-  isSrc = fs.existsSync(resolve(dir, srcName));
+  result.isSrc = fs.existsSync(resolve(dir, srcName));
 
   const isEntryValid = [];
 
   /**
    * Valid package.json and isValidateEntry is required.
    */
-  if (entry) {
-    const srcPath = isSrc ? resolve(dir, srcName) : dir;
+  const srcPath = result.isSrc ? resolve(dir, srcName) : dir;
 
-    let entries;
-    let validKyName;
+  let entries;
+  let validKyName;
 
-    if (typeof entry === "string") {
-      entries = [entry];
-      validKyName = "isEntryValid";
-    } else {
-      entries = entry;
-      validKyName = "isValid";
-    }
-
-    const dirFiles = getFiles(srcPath);
-
-    entries.forEach((entryFile) => {
-      const entryExt = getExtension(dirFiles, entryFile);
-
-      const isEntryFilesValid = isValid(
-        srcPath,
-        getFullName(entryFile, entryExt)
-      );
-
-      isEntryValid.push({
-        entry: entryFile,
-        entryExt,
-        [validKyName]: isEntryFilesValid,
-      });
-    });
-
-    const result = {
-      isJsonValid,
-      isSrc,
-    };
-
-    return isEntryValid.length === 1
-      ? Object.assign(result, isEntryValid[0])
-      : Object.assign(result, { isEntryValid });
+  if (typeof entry === "string") {
+    entries = [entry];
+    validKyName = "isEntryValid";
+  } else {
+    entries = entry;
+    validKyName = "isValid";
   }
 
-  return { entry, entryExt: null, isEntryValid: null };
+  const dirFiles = getFiles(srcPath);
+
+  entries.forEach((entryFile) => {
+    const entryExt = getExtension(dirFiles, entryFile);
+
+    const isEntryFilesValid = isValid(
+      srcPath,
+      getFullName(entryFile, entryExt)
+    );
+
+    isEntryValid.push({
+      entry: entryFile,
+      entryExt,
+      [validKyName]: isEntryFilesValid,
+    });
+  });
+
+  return isEntryValid.length === 1
+    ? Object.assign(result, isEntryValid[0])
+    : Object.assign(result, { isEntryValid });
 }
 
 module.exports = {
