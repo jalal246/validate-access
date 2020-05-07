@@ -116,15 +116,25 @@ function validateAccess({
   const dirFiles = getFiles(srcPath);
 
   entries.forEach((entryFile) => {
-    const entryExt = getExtension(dirFiles, entryFile);
+    let file = entryFile;
+    let entryExt;
 
-    const isEntryFilesValid = isValid(
-      srcPath,
-      getFullName(entryFile, entryExt)
-    );
+    if (result.isSrc && file.includes("src/")) {
+      [, file] = file.split("/");
+
+      if (file.includes(".")) {
+        [file, entryExt] = file.split(".");
+      }
+    }
+
+    if (!entryExt) {
+      entryExt = getExtension(dirFiles, file);
+    }
+
+    const isEntryFilesValid = isValid(srcPath, getFullName(file, entryExt));
 
     isEntryValid.push({
-      entry: entryFile,
+      entry: file,
       entryExt,
       [validKyName]: isEntryFilesValid,
     });
