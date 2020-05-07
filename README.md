@@ -34,7 +34,7 @@ And for multi entries:
 - `isJsonValid` and `isSrc` (same as above).
 - `isEntryValid: Array <entryValidateInfo>`
   - `entry: string` - entry name.
-  - `isEntryValid: boolean` - true if entry is valid.
+  - `isValid: boolean` - true if entry is valid.
   - `entryExt: string|null` - entry extension if exist.
 
 ### Example - One Entry
@@ -90,17 +90,17 @@ const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
 //   {
 //     entry: "bar",
 //     entryExt: "ts",
-//     isEntryValid: true,
+//     isValid: true,
 //   },
 //   {
 //     entry: "foo",
 //     entryExt: "js",
-//     isEntryValid: true,
+//     isValid: true,
 //   },
 //   {
 //     entry: "foobar",
 //     entryExt: null,
-//     isEntryValid: false,
+//     isValid: false,
 //   },
 // ],
 ```

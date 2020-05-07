@@ -82,52 +82,57 @@ function validateAccess({
   srcName = "src",
   isValidateJson = true,
 } = {}) {
-  const isJsonValid = isValidateJson ? isValid(dir, "package.json") : null;
+  const result = {};
 
-  let isSrc = null;
+  result.isJsonValid = isValidateJson ? isValid(dir, "package.json") : null;
+
+  if (!entry) {
+    return result;
+  }
 
   /**
    * Let's see where files life in src or flat.
    */
-  isSrc = fs.existsSync(resolve(dir, srcName));
+  result.isSrc = fs.existsSync(resolve(dir, srcName));
 
   const isEntryValid = [];
 
   /**
    * Valid package.json and isValidateEntry is required.
    */
-  if (entry) {
-    const srcPath = isSrc ? resolve(dir, srcName) : dir;
+  const srcPath = result.isSrc ? resolve(dir, srcName) : dir;
 
-    const entries = typeof entry === "string" ? [entry] : entry;
+  let entries;
+  let validKyName;
 
-    const dirFiles = getFiles(srcPath);
-
-    entries.forEach((entryFile) => {
-      const entryExt = getExtension(dirFiles, entryFile);
-
-      const isEntryFilesValid = isValid(
-        srcPath,
-        getFullName(entryFile, entryExt)
-      );
-
-      isEntryValid.push({
-        entry: entryFile,
-        entryExt,
-        isEntryValid: isEntryFilesValid,
-      });
-    });
+  if (typeof entry === "string") {
+    entries = [entry];
+    validKyName = "isEntryValid";
+  } else {
+    entries = entry;
+    validKyName = "isValid";
   }
 
-  return {
-    isJsonValid,
-    isSrc,
-    ...(!entry
-      ? { entry, entryExt: null, isEntryValid: null }
-      : isEntryValid.length === 1
-      ? { ...isEntryValid[0] }
-      : { isEntryValid }),
-  };
+  const dirFiles = getFiles(srcPath);
+
+  entries.forEach((entryFile) => {
+    const entryExt = getExtension(dirFiles, entryFile);
+
+    const isEntryFilesValid = isValid(
+      srcPath,
+      getFullName(entryFile, entryExt)
+    );
+
+    isEntryValid.push({
+      entry: entryFile,
+      entryExt,
+      [validKyName]: isEntryFilesValid,
+    });
+  });
+
+  return isEntryValid.length === 1
+    ? Object.assign(result, isEntryValid[0])
+    : Object.assign(result, { isEntryValid });
 }
 
 module.exports = {
