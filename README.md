@@ -54,6 +54,31 @@ const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
 // { isJsonValid: true, isSrc: true, entry: "index", isEntryValid: true, entryExt: "js" }
 ```
 
+It works with different form of entry. So, `isEntryValid: true` in all the
+following cases:  
+`entry: "src/foo"`  
+`entry: "src/foo.js"`  
+`entry: "foo.js"`  
+`entry: "foo"`
+
+### Example - Different Entry Form
+
+```js
+import { validateAccess } from "validate-access";
+
+// ├───package.json
+// ├───src
+// │   ├───index.js
+// │   └───foo.js
+
+const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
+  dir: "path/to/valid/package",
+  entry: "src/foo.js",
+});
+
+// { isJsonValid: true, isSrc: true, entry: "foo", isEntryValid: true, entryExt: "js" }
+```
+
 ### Example - Custom Entry
 
 ```js
