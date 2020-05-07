@@ -99,7 +99,16 @@ function validateAccess({
   if (entry) {
     const srcPath = isSrc ? resolve(dir, srcName) : dir;
 
-    const entries = typeof entry === "string" ? [entry] : entry;
+    let entries;
+    let validKyName;
+
+    if (typeof entry === "string") {
+      entries = [entry];
+      validKyName = "isEntryValid";
+    } else {
+      entries = entry;
+      validKyName = "isValid";
+    }
 
     const dirFiles = getFiles(srcPath);
 
@@ -114,20 +123,21 @@ function validateAccess({
       isEntryValid.push({
         entry: entryFile,
         entryExt,
-        isEntryValid: isEntryFilesValid,
+        [validKyName]: isEntryFilesValid,
       });
     });
+
+    const result = {
+      isJsonValid,
+      isSrc,
+    };
+
+    return isEntryValid.length === 1
+      ? Object.assign(result, isEntryValid[0])
+      : Object.assign(result, { isEntryValid });
   }
 
-  return {
-    isJsonValid,
-    isSrc,
-    ...(!entry
-      ? { entry, entryExt: null, isEntryValid: null }
-      : isEntryValid.length === 1
-      ? { ...isEntryValid[0] }
-      : { isEntryValid }),
-  };
+  return { entry, entryExt: null, isEntryValid: null };
 }
 
 module.exports = {
