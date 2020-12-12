@@ -1,7 +1,5 @@
 "use_strict";
 
-/* eslint-disable no-nested-ternary */
-/* eslint-disable no-console */
 const fs = require("fs");
 const { resolve } = require("path");
 
@@ -51,9 +49,9 @@ function getExtension(dir, entry) {
 
   const regExp = new RegExp(`^${entry}.[a-z]+$`, "i");
 
-  const fullEntryName = files.find((file) => {
-    return regExp.test(file);
-  });
+  const fullEntryName = files.find((file) => 
+     regExp.test(file)
+  );
 
   /**
    * If not found, then will throw error when split.
