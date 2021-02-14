@@ -1,6 +1,7 @@
 # validate-access
 
-> Validate project accessibility files
+> The only function which is crazy enough to validate project accessibility
+> files in all possible means - literally.
 
 ```bash
 npm install validate-access

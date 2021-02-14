@@ -1,141 +1,155 @@
-"use_strict";
+// @ts-check
 
 const fs = require("fs");
-const { resolve } = require("path");
+const path = require("path");
 
 /**
- * Gets files in given directory
- *
- * @param {string|Array} dir
- * @returns {Array} - files in directory
- */
-function getFiles(dir) {
-  return typeof dir === "string" ? fs.readdirSync(dir) : dir;
-}
-
-/**
- * Gets full name with extension
- *
- * @param {string} name
- * @param {string} ext
- * @returns {string} - full name
- */
-function getFullName(name, ext) {
-  return `${name}.${ext}`;
-}
-
-/**
- * Validates file existence in given directory
- *
  * @param {string} dir
- * @param {string} fname
- * @returns {boolean} -  true if exists
+ * @param {string} srcName
+ * @param {boolean} isValidateJson
  */
-function isValid(dir, fname) {
-  const cwd = resolve(dir, fname);
-
-  return fs.existsSync(cwd);
+function getSrcWithJsonStatus(dir, srcName, isValidateJson) {
+  return {
+    isSrc: fs.existsSync(path.resolve(dir, srcName)),
+    isJsonValid: isValidateJson
+      ? fs.existsSync(path.resolve(dir, "package.json"))
+      : null,
+  };
 }
+
+const extensions = ["js", "ts"];
 
 /**
- * Gets extension used in for given entry.
- *
- * @param {string} dir - project directory
- * @param {string} entry - project file entry name
- * @returns {string|null} extension if exist
- */
-function getExtension(dir, entry) {
-  const files = getFiles(dir);
-
-  const regExp = new RegExp(`^${entry}.[a-z]+$`, "i");
-
-  const fullEntryName = files.find((file) => 
-     regExp.test(file)
-  );
-
-  /**
-   * If not found, then will throw error when split.
-   */
-  if (fullEntryName && fullEntryName.length > 0) {
-    return fullEntryName.split(".").pop();
-  }
-
-  return null;
-}
+ * @typedef {Object} Input
+ * @property {string} input.dir [dir="."]
+ * @property {string} input.entry [entry="index"]
+ * @property {string} [srcName="src"]
+ * @property {boolean} [isValidateJson=true] */
 
 /**
  * Validates access readability  for `package.json` and project entry if
  * provided.
  *
- * @param {string} [dir="."]
- * @param {string} [entry="index"]
- * @param {string} [srcName="src"]
- * @param {boolean} [isValidateJson=true]
- *
- * @returns {Object} results
+ * @param {Input} input
  */
 function validateAccess({
-  dir = ".",
-  entry = "index",
+  dir: inputDir,
+  entry: inputEntry = "index",
   srcName = "src",
   isValidateJson = true,
-} = {}) {
-  const result = {};
+}) {
+  let result = {};
 
-  result.isJsonValid = isValidateJson ? isValid(dir, "package.json") : null;
+  const isSrcPathFromDir = fs.existsSync(inputDir);
 
-  if (!entry) {
-    return result;
+  let dir;
+
+  let name;
+  let ext;
+
+  if (isSrcPathFromDir) {
+    dir = inputDir;
+
+    // if this dir includes Json & src
+    result = getSrcWithJsonStatus(dir, srcName, isValidateJson);
+
+    // if this dir has also the file entry. covering a special case.
+    ({ name, ext } = path.parse(inputDir));
+
+    if (ext.length !== 0) {
+      return Object.assign(result, {
+        entry: name,
+        isEntryValid: true,
+        entryExt: ext.split(".")[1],
+      });
+    }
+  } else {
+    // no directory, then look into the root as a default.
+    dir = ".";
+
+    result = getSrcWithJsonStatus(dir, srcName, isValidateJson);
+
+    if (result.isSrc) {
+      dir = path.resolve(dir, srcName);
+    }
   }
-
-  /**
-   * Let's see where files life in src or flat.
-   */
-  result.isSrc = fs.existsSync(resolve(dir, srcName));
 
   const isEntryValid = [];
 
-  /**
-   * Valid package.json and isValidateEntry is required.
-   */
-  const srcPath = result.isSrc ? resolve(dir, srcName) : dir;
-
   let entries;
-  let validKyName;
 
-  if (typeof entry === "string") {
-    entries = [entry];
-    validKyName = "isEntryValid";
+  if (typeof inputEntry === "string") {
+    entries = [inputEntry];
   } else {
-    entries = entry;
-    validKyName = "isValid";
+    entries = inputEntry;
   }
 
-  const dirFiles = getFiles(srcPath);
+  const validKyName = entries.length === 1 ? "isEntryValid" : "isValid";
 
   entries.forEach((entryFile) => {
-    let file = entryFile;
-    let entryExt;
+    let isEntryFilesValid = false;
 
-    if (result.isSrc && file.includes("src/")) {
-      [, file] = file.split("/");
+    // reset to null
+    ext = null;
+
+    // extension is embedded
+    if (entryFile.includes(".")) {
+      ({ name, ext } = path.parse(path.resolve(dir, entryFile)));
+
+      // check if exists. Maybe the format is failed but not exist.
+
+      // has a valid extension
+      if (ext.length !== 0) {
+        // check if exists. Maybe the format is failed but not exist.
+        isEntryFilesValid = fs.existsSync(path.resolve(dir, entryFile));
+
+        // Still invalid? maybe source.
+        if (!isEntryFilesValid) {
+          if (
+            result.isSrc &&
+            (!dir.includes(srcName) || !entryFile.includes(srcName))
+          ) {
+            isEntryFilesValid = fs.existsSync(
+              path.resolve(dir, srcName, entryFile)
+            );
+          }
+        }
+
+        [, ext] = ext.split(".");
+      }
+
+      isEntryValid.push({
+        entry: name,
+        entryExt: ext,
+        [validKyName]: isEntryFilesValid,
+      });
+    } else {
+      let entry = entryFile;
+      let entryExt;
+
+      for (let i = 0; i < extensions.length; i += 1) {
+        entryExt = extensions[i];
+
+        isEntryFilesValid = fs.existsSync(
+          path.resolve(dir, `${entryFile}.${entryExt}`)
+        );
+
+        if (isEntryFilesValid) {
+          // Covers src/b
+          ({ name: entry } = path.parse(path.resolve(dir, entryFile)));
+          break;
+        }
+
+        // reset to null
+        entryExt = null;
+      }
+
+      isEntryValid.push({
+        entry,
+        entryExt,
+        [validKyName]: isEntryFilesValid,
+      });
     }
-
-    if (file.includes(".")) {
-      [file, entryExt] = file.split(".");
-    }
-
-    if (!entryExt) {
-      entryExt = getExtension(dirFiles, file);
-    }
-
-    const isEntryFilesValid = isValid(srcPath, getFullName(file, entryExt));
-
-    isEntryValid.push({
-      entry: file,
-      entryExt,
-      [validKyName]: isEntryFilesValid,
-    });
   });
 
   return isEntryValid.length === 1
@@ -144,6 +158,5 @@ function validateAccess({
 }
 
 module.exports = {
-  getExtension,
   validateAccess,
 };
