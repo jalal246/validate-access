@@ -1,4 +1,4 @@
-// @ts-check
+"use-strict";
 
 const fs = require("fs");
 const path = require("path");
@@ -17,26 +17,48 @@ function getSrcWithJsonStatus(dir, srcName, isValidateJson) {
   };
 }
 
-const extensions = ["js", "ts"];
+const defaultExtensions = ["js", "ts"];
 
 /**
  * @typedef {Object} Input
- * @property {string} input.dir [dir="."]
- * @property {string} input.entry [entry="index"]
+ * @property {string} dir [dir="."]
+ * @property {string} entry [entry="index"]
  * @property {string} [srcName="src"]
- * @property {boolean} [isValidateJson=true] */
+ * @property {boolean} [isValidateJson=true]
+ * @property {string[]} [extensions=extension]
+ * */
+
+/**
+ * @typedef {Object} OutputOne
+ * @property {boolean} isJsonValid
+ * @property {boolean} isSrc
+ * @property {string} entry
+ * @property {boolean} isEntryValid
+ * @property {string} entryExt
+ * */
+
+/**
+ * @typedef {Object} OutputMulti
+ * @property {boolean} isJsonValid
+ * @property {boolean} isSrc
+ * @property {string} entry
+ * @property {boolean} isValid
+ * @property {string} entryExt
+ * */
 
 /**
  * Validates access readability  for `package.json` and project entry if
  * provided.
  *
  * @param {Input} input
+ * @returns {OutputOne | Array<OutputMulti>}
  */
 function validateAccess({
   dir: inputDir,
   entry: inputEntry = "index",
   srcName = "src",
   isValidateJson = true,
+  extensions = defaultExtensions,
 }) {
   let result = {};
 
