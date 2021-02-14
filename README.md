@@ -1,6 +1,7 @@
 # validate-access
 
-> Validate project accessibility files
+> The only function which is crazy enough to validate project accessibility
+> files in all possible means - literally.
 
 ```bash
 npm install validate-access
@@ -14,10 +15,11 @@ Validates package accessibility including package.json and entry/entries.
 
 ```js
 validateAccess({
-dir?: string,
-entry?: string|Array,
-srcName? :string,
-isValidateJson? :boolean
+dir?: string, // default: .
+entry?: string|Array, // default: index
+srcName? :string, // default: src
+isValidateJson? :boolean // default: true
+extension?: string[] // default: ["js", "ts"];
 })
 ```
 

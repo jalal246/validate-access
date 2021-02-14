@@ -9,7 +9,7 @@ const source = resolve(__dirname, "fixtures");
 
 describe("valid", () => {
   it("default ", () => {
-    const res = validateAccess();
+    const res = validateAccess({});
 
     expect(res).to.deep.equal({
       isJsonValid: true,
@@ -99,16 +99,15 @@ describe("valid", () => {
   });
 
   it("specific entry non-flat", () => {
-    const filePath = resolve(source, "valid-json-entries-src");
+    const filePath = resolve(source, "valid-json-entries-src", "src", "b.ts");
 
     const res = validateAccess({
       dir: filePath,
-      entry: "b",
     });
 
     expect(res).to.deep.equal({
-      isJsonValid: true,
-      isSrc: true,
+      isJsonValid: false,
+      isSrc: false,
       entry: "b",
       isEntryValid: true,
       entryExt: "ts",
@@ -168,46 +167,15 @@ describe("valid", () => {
 
     const res = validateAccess({
       dir: filePath,
-      srcName: "lib",
+      entry: ["lib/a.js"],
     });
 
     expect(res).to.deep.equal({
       isJsonValid: true,
       isSrc: true,
-      entry: "index",
+      entry: "a",
       isEntryValid: true,
       entryExt: "js",
-    });
-  });
-
-  it("don't validate entry", () => {
-    const filePath = resolve(source, "valid-json-entries-flat");
-
-    const res = validateAccess({
-      dir: filePath,
-      entry: null,
-    });
-
-    expect(res).to.deep.equal({
-      isJsonValid: true,
-    });
-  });
-
-  it("don't validate json", () => {
-    const filePath = resolve(source, "valid-json-entries-flat");
-
-    const res = validateAccess({
-      dir: filePath,
-      isValidateJson: false,
-      entry: "b",
-    });
-
-    expect(res).to.deep.equal({
-      isJsonValid: null,
-      isSrc: false,
-      entry: "b",
-      isEntryValid: true,
-      entryExt: "ts",
     });
   });
 });
