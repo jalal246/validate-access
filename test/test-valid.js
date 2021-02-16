@@ -3,7 +3,7 @@
 const { expect } = require("chai");
 const { resolve } = require("path");
 
-const { validateAccess } = require("../src");
+const { validateAccess } = require("../lib");
 
 const source = resolve(__dirname, "fixtures");
 
@@ -39,6 +39,7 @@ describe("valid", () => {
 
     const res = validateAccess({
       dir: filePath,
+      entry: null,
     });
 
     expect(res).to.deep.equal({
