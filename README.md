@@ -16,14 +16,14 @@ Validates package accessibility including package.json and entry/entries.
 ```js
 validateAccess({
 dir?: string, // default: .
-entry?: string|Array, // default: index
+entry?: string|string[], // default: index
 srcName? :string, // default: src
 isEntryValidateJson? :boolean, // default: true
 extension?: string[] // default: ["js", "ts"];
 })
 ```
 
-The result object depends on input. for one entry:
+The result object depends on input. for one entry :
 
 - `isJsonValid: boolean` - true if dir has package.json
 - `isSrc: boolean` - true if there's src folder.

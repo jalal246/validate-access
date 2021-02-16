@@ -1,5 +1,5 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
 function getSrcWithJsonStatus(
   dir: string,
@@ -169,6 +169,4 @@ function validateAccess({
     : Object.assign(result, { entries });
 }
 
-module.exports = {
-  validateAccess,
-};
+export default validateAccess;
