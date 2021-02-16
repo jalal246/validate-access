@@ -78,21 +78,21 @@ describe("valid", () => {
     expect(res).to.deep.equal({
       isJsonValid: true,
       isSrc: false,
-      isEntryValid: [
+      entries: [
         {
           entry: "b",
           entryExt: "ts",
-          isValid: true,
+          isEntryValid: true,
         },
         {
           entry: "index",
           entryExt: "js",
-          isValid: true,
+          isEntryValid: true,
         },
         {
           entry: "c",
           entryExt: null,
-          isValid: false,
+          isEntryValid: false,
         },
       ],
     });
@@ -142,21 +142,21 @@ describe("valid", () => {
     expect(res).to.deep.equal({
       isJsonValid: true,
       isSrc: true,
-      isEntryValid: [
+      entries: [
         {
           entry: "b",
           entryExt: "ts",
-          isValid: true,
+          isEntryValid: true,
         },
         {
           entry: "a",
           entryExt: "js",
-          isValid: true,
+          isEntryValid: true,
         },
         {
           entry: "index",
           entryExt: "ts",
-          isValid: false,
+          isEntryValid: false,
         },
       ],
     });

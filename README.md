@@ -18,7 +18,7 @@ validateAccess({
 dir?: string, // default: .
 entry?: string|Array, // default: index
 srcName? :string, // default: src
-isValidateJson? :boolean // default: true
+isEntryValidateJson? :boolean, // default: true
 extension?: string[] // default: ["js", "ts"];
 })
 ```
@@ -34,9 +34,9 @@ The result object depends on input. for one entry:
 And for multi entries:
 
 - `isJsonValid` and `isSrc` (same as above).
-- `isEntryValid: Array <entryValidateInfo>`
+- `entries: Array <entryValidateInfo>`
   - `entry: string` - entry name.
-  - `isValid: boolean` - true if entry is valid.
+  - `isEntryValid: boolean` - true if entry is valid.
   - `entryExt: string|null` - entry extension if exist.
 
 ### Example - One Entry
@@ -113,21 +113,21 @@ const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
 
 // isJsonValid: false,
 // isSrc: true,
-// isEntryValid: [
+// entries: [
 //   {
 //     entry: "bar",
 //     entryExt: "ts",
-//     isValid: true,
+//     isEntryValid: true,
 //   },
 //   {
 //     entry: "foo",
 //     entryExt: "js",
-//     isValid: true,
+//     isEntryValid: true,
 //   },
 //   {
 //     entry: "foobar",
 //     entryExt: null,
-//     isValid: false,
+//     isEntryValid: false,
 //   },
 // ],
 ```

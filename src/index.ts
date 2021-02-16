@@ -1,14 +1,11 @@
-"use-strict";
-
 const fs = require("fs");
 const path = require("path");
 
-/**
- * @param {string} dir
- * @param {string} srcName
- * @param {boolean} isValidateJson
- */
-function getSrcWithJsonStatus(dir, srcName, isValidateJson) {
+function getSrcWithJsonStatus(
+  dir: string,
+  srcName: string,
+  isValidateJson: boolean
+): { isSrc: boolean; isJsonValid: boolean | null } {
   return {
     isSrc: fs.existsSync(path.resolve(dir, srcName)),
     isJsonValid: isValidateJson
@@ -17,41 +14,36 @@ function getSrcWithJsonStatus(dir, srcName, isValidateJson) {
   };
 }
 
-const defaultExtensions = ["js", "ts"];
+const defaultExtensions: string[] = ["js", "ts"];
 
-/**
- * @typedef {Object} Input
- * @property {string} dir [dir="."]
- * @property {string} entry [entry="index"]
- * @property {string} [srcName="src"]
- * @property {boolean} [isValidateJson=true]
- * @property {string[]} [extensions=extension]
- * */
+interface Input {
+  dir: ".";
+  entry: "index";
+  srcName: "src";
+  isValidateJson: true;
+  extensions: typeof defaultExtensions;
+}
 
-/**
- * @typedef {Object} OutputOne
- * @property {boolean} isJsonValid
- * @property {boolean} isSrc
- * @property {string} entry
- * @property {boolean} isEntryValid
- * @property {string} entryExt
- * */
+interface ValidationMeta {
+  entry: string;
+  isEntryValid: boolean;
+  entryExt: string;
+}
 
-/**
- * @typedef {Object} OutputMulti
- * @property {boolean} isJsonValid
- * @property {boolean} isSrc
- * @property {string} entry
- * @property {boolean} isValid
- * @property {string} entryExt
- * */
+interface ValidationOneEntry extends ValidationMeta {
+  isJsonValid: boolean;
+  isSrc: boolean;
+}
+
+interface ValidationMulti {
+  isJsonValid: string;
+  isSrc: boolean;
+  entire: ValidationMeta[];
+}
 
 /**
  * Validates access readability  for `package.json` and project entry if
  * provided.
- *
- * @param {Input} input
- * @returns {OutputOne | Array<OutputMulti>}
  */
 function validateAccess({
   dir: inputDir,
@@ -59,15 +51,14 @@ function validateAccess({
   srcName = "src",
   isValidateJson = true,
   extensions = defaultExtensions,
-}) {
-  let result = {};
+}: Input): ValidationOneEntry | ValidationMulti {
+  let result: ReturnType<typeof getSrcWithJsonStatus>;
 
-  const isSrcPathFromDir = fs.existsSync(inputDir);
+  const isSrcPathFromDir: boolean = fs.existsSync(inputDir);
 
-  let dir;
-
-  let name;
-  let ext;
+  let dir: string;
+  let name: string;
+  let ext: string;
 
   if (isSrcPathFromDir) {
     dir = inputDir;
@@ -96,19 +87,18 @@ function validateAccess({
     }
   }
 
-  const isEntryValid = [];
+  // output entries
+  const entries = [];
 
-  let entries;
+  let inputEntries;
 
   if (typeof inputEntry === "string") {
-    entries = [inputEntry];
+    inputEntries = [inputEntry];
   } else {
-    entries = inputEntry;
+    inputEntries = inputEntry;
   }
 
-  const validKyName = entries.length === 1 ? "isEntryValid" : "isValid";
-
-  entries.forEach((entryFile) => {
+  inputEntries.forEach((entryFile) => {
     let isEntryFilesValid = false;
 
     // reset to null
@@ -140,10 +130,10 @@ function validateAccess({
         [, ext] = ext.split(".");
       }
 
-      isEntryValid.push({
+      entries.push({
         entry: name,
         entryExt: ext,
-        [validKyName]: isEntryFilesValid,
+        isEntryValid: isEntryFilesValid,
       });
     } else {
       let entry = entryFile;
@@ -166,17 +156,17 @@ function validateAccess({
         entryExt = null;
       }
 
-      isEntryValid.push({
+      entries.push({
         entry,
         entryExt,
-        [validKyName]: isEntryFilesValid,
+        isEntryValid: isEntryFilesValid,
       });
     }
   });
 
-  return isEntryValid.length === 1
-    ? Object.assign(result, isEntryValid[0])
-    : Object.assign(result, { isEntryValid });
+  return entries.length === 1
+    ? Object.assign(result, entries[0])
+    : Object.assign(result, { entries });
 }
 
 module.exports = {
