@@ -11,33 +11,37 @@ npm install validate-access
 
 ### validateAccess
 
-Validates package accessibility including package.json and entry/entries.
+Validates package accessibility including package.json and entry file or
+multiple entries. It doesn't just check for string format, it actually goes
+deeper to check for valid extension and then validate existence.
 
 ```js
 validateAccess({
 dir?: string, // default: .
-entry?: string|string[], // default: index
+entry?: string|string[],
 srcName? :string, // default: src
 isEntryValidateJson? :boolean, // default: true
 extension?: string[] // default: ["js", "ts"];
 })
 ```
 
-The result object depends on input. for one entry :
+The result object depends on input.
 
-- `isJsonValid: boolean` - true if dir has package.json
+For one entry it returns:
+
+- `isJsonValid: boolean | null` - true if dir has package.json.
 - `isSrc: boolean` - true if there's src folder.
 - `isEntryValid: boolean` - if given entry is exist.
-- `entry: string` - entry name.
-- `entryExt: string|null` - entry extension if exist.
+- `entry: string` - entry file name that was checked.
+- `entryExt: string` - entry extension if exist.
 
 And for multi entries:
 
 - `isJsonValid` and `isSrc` (same as above).
-- `entries: Array <entryValidateInfo>`
-  - `entry: string` - entry name.
-  - `isEntryValid: boolean` - true if entry is valid.
-  - `entryExt: string|null` - entry extension if exist.
+- `entries: Array <EntryValidateInfo>`
+  - `isEntryValid: boolean` - if given entry is exist.
+  - `entry: string` - entry file name that was checked.
+  - `entryExt: string` - entry extension if exist.
 
 ### Example - One Entry
 
