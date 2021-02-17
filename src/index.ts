@@ -1,5 +1,6 @@
-const fs = require("fs");
-const path = require("path");
+/* eslint-disable import/prefer-default-export */
+import fs from "fs";
+import path from "path";
 
 const defaultExtensions: string[] = ["js", "ts"];
 
@@ -221,6 +222,4 @@ function validateAccess({
       Object.assign(result, { entries });
 }
 
-module.exports = {
-  validateAccess,
-};
+export { validateAccess };
