@@ -20,7 +20,7 @@ validateAccess({
   dir?: string, // default: .
   entry?: string|string[],
   srcName? :string, // default: src
-  isEntryValidateJson? :boolean, // default: true
+  isValidateJson? :boolean, // default: true
   extension?: string[] // default: ["js", "ts"];
 })
 ```
@@ -57,7 +57,9 @@ const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
   dir: "path/to/valid/package",
 });
 
-// { isJsonValid: true, isSrc: true, entry: "index", isEntryValid: true, entryExt: "js" }
+>
+
+{ isJsonValid: true, isSrc: true, entry: "index", isEntryValid: true, entryExt: "js" }
 ```
 
 It works with different form of entry. So, `isEntryValid: true` in all the
@@ -82,7 +84,9 @@ const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
   entry: "src/foo.js",
 });
 
-// { isJsonValid: true, isSrc: true, entry: "foo", isEntryValid: true, entryExt: "js" }
+>
+
+{ isJsonValid: true, isSrc: true, entry: "foo", isEntryValid: true, entryExt: "js" }
 ```
 
 ### Example - Custom Entry
@@ -98,7 +102,29 @@ const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
   entry: "foo",
 });
 
-// { isJsonValid: false, isSrc: false, entry: "foo", isEntryValid: true, entryExt: "ts" }
+>
+  {
+    isJsonValid: false,
+    isSrc: false,
+    entry: "foo",
+    entryExt: "ts"
+    isEntryValid: true,
+  }
+```
+
+You will get the same result using:
+
+`````js
+const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
+  dir: "path/to/valid/package/foo",
+});
+```
+
+Or
+````js
+const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
+  dir: "path/to/valid/package/foo.ts",
+});
 ```
 
 ### Example - Multi Entries
@@ -115,26 +141,27 @@ const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
   entry: ["bar", "foo", "foobar"],
 });
 
-// isJsonValid: false,
-// isSrc: true,
-// entries: [
-//   {
-//     entry: "bar",
-//     entryExt: "ts",
-//     isEntryValid: true,
-//   },
-//   {
-//     entry: "foo",
-//     entryExt: "js",
-//     isEntryValid: true,
-//   },
-//   {
-//     entry: "foobar",
-//     entryExt: null,
-//     isEntryValid: false,
-//   },
-// ],
-```
+>
+  isJsonValid: false,
+  isSrc: true,
+  entries: [
+    {
+      entry: "bar",
+      entryExt: "ts",
+      isEntryValid: true,
+    },
+    {
+      entry: "foo",
+      entryExt: "js",
+      isEntryValid: true,
+    },
+    {
+      entry: "foobar",
+      entryExt: "",
+      isEntryValid: false,
+    },
+  ],
+`````
 
 ## Test
 
