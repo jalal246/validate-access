@@ -67,8 +67,8 @@ following cases:
 `entry: "src/foo"`  
 `entry: "src/foo.js"`  
 `entry: "foo.js"`  
-`entry: "foo"`
-`dir: "path/to/valid/package/src/foo"`
+`entry: "foo"`  
+`dir: "path/to/valid/package/src/foo"`  
 `dir: "path/to/valid/package/src/foo.js"`
 
 ### Example - Different Entry Form
