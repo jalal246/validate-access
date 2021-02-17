@@ -43,7 +43,7 @@ jobs:
         run: yarn eslint .
 
   test:
-    name: Check Types
+    name: Unit Test
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
