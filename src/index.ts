@@ -143,7 +143,7 @@ function validateAccess({
       }
       const dirPossibilities = ["index", null];
 
-      if (!inputEntry) {
+      if (!inputEntry || inputEntry.length === 0) {
         for (let i = 0; i < dirPossibilities.length; i += 1) {
           const entryFile = dirPossibilities[i];
 
