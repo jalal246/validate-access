@@ -124,7 +124,7 @@ const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
 
 Or
 
-````js
+```js
 const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
   dir: "path/to/valid/package/foo.ts",
 });
@@ -164,7 +164,7 @@ const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
       isEntryValid: false,
     },
   ],
-````
+```
 
 ## Test
 
