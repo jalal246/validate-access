@@ -37,7 +37,7 @@ jobs:
         run: yarn install
 
       - name: Compile to JS
-        run: "yarn build"
+        run: "yarn tsc"
 
       - name: Run lint
         run: yarn eslint .
@@ -72,7 +72,7 @@ jobs:
         run: yarn install
 
       - name: Compile to JS
-        run: "yarn build"
+        run: "yarn tsc"
 
       - name: Run Test
         run: CI=true yarn mocha
