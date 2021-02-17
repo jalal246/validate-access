@@ -1,6 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
+const defaultExtensions: string[] = ["js", "ts"];
+
 interface Input {
   dir: ".";
   entry?: string;
@@ -75,6 +77,7 @@ function getEntry(
 
     if (isEntryValid) {
       // Covers src/b
+      // eslint-disable-next-line no-param-reassign
       ({ name: entry } = path.parse(entry ? path.resolve(dir, entry) : dir));
 
       break;
@@ -84,6 +87,7 @@ function getEntry(
     entryExt = "";
   }
 
+  // @ts-expect-error
   return { entry, entryExt, isEntryValid };
 }
 
@@ -99,8 +103,6 @@ function getSrcWithJsonStatus(
       : null,
   };
 }
-
-const defaultExtensions: string[] = ["js", "ts"];
 
 /**
  * Validates access readability  for `package.json` and project entry if
@@ -118,11 +120,10 @@ function validateAccess({
   let dir: string;
   let name: string;
   let ext: string;
-  let base: string;
 
   if (inputDir) {
     // if this dir has also the file entry. covering a special case.
-    ({ name, ext, base } = path.parse(inputDir));
+    ({ name, ext } = path.parse(inputDir));
 
     const hasExt = ext.length !== 0;
     const isSrcPathFromDir: boolean = inputDir.length > 0;
@@ -214,8 +215,10 @@ function validateAccess({
   });
 
   return entries.length === 1
-    ? Object.assign(result, entries[0])
-    : Object.assign(result, { entries });
+    ? // @ts-expect-error
+      Object.assign(result, entries[0])
+    : // @ts-expect-error
+      Object.assign(result, { entries });
 }
 
 module.exports = {
