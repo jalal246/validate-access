@@ -17,11 +17,11 @@ deeper to check for valid extension and then validate existence.
 
 ```js
 validateAccess({
-dir?: string, // default: .
-entry?: string|string[],
-srcName? :string, // default: src
-isEntryValidateJson? :boolean, // default: true
-extension?: string[] // default: ["js", "ts"];
+  dir?: string, // default: .
+  entry?: string|string[],
+  srcName? :string, // default: src
+  isEntryValidateJson? :boolean, // default: true
+  extension?: string[] // default: ["js", "ts"];
 })
 ```
 
