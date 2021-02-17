@@ -10,5 +10,9 @@ module.exports = {
   },
   extends: ["airbnb-base", "prettier"],
   plugins: ["@typescript-eslint"],
-  rules: { describe: true, it: true, expect: true },
+  globals: {
+    describe: true,
+    it: true,
+    expect: true,
+  },
 };
