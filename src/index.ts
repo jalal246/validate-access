@@ -136,7 +136,7 @@ function validateAccess({
       if (hasExt) {
         return Object.assign(result, {
           entry: name,
-          isEntryValid: true,
+          isEntryValid: fs.existsSync(dir),
           entryExt: ext.split(".")[1],
         });
       }
