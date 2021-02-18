@@ -206,7 +206,7 @@ describe("Valid", () => {
     });
   });
 
-  describe("All valid project with src structure", () => {
+  describe.only("All valid project with src structure", () => {
     it("Dealing with directory only as input", () => {
       const filePath = resolve(source, "valid-json-entries-src");
 
@@ -215,6 +215,7 @@ describe("Valid", () => {
       });
 
       expect(res).to.deep.equal({
+        dir: filePath,
         isJsonValid: true,
         isSrc: true,
         entry: "",
@@ -224,67 +225,78 @@ describe("Valid", () => {
       });
     });
 
-    it.skip("Dealing with a valid targeted entry no extension involved", () => {
+    it("Dealing with a valid targeted entry no extension involved", () => {
       const filePath = resolve(source, "valid-json-entries-src");
+      const entry = "b";
 
       const res = validateAccess({
         dir: filePath,
-        entry: "b",
+        entry,
       });
 
       expect(res).to.deep.equal({
+        dir: filePath,
         isJsonValid: true,
-        isSrc: false,
-        entry: "b",
+        isSrc: true,
+        entry,
+        name: "b",
         isEntryValid: true,
         ext: "ts",
       });
     });
 
-    // it("Dealing with a valid targeted entry with an extension involved", () => {
-    //   const filePath = resolve(source, "valid-json-entries-src");
-
-    //   const res = validateAccess({
-    //     dir: filePath,
-    //     entry: "b.ts",
-    //   });
-
-    //   expect(res).to.deep.equal({
-    //     isJsonValid: true,
-    //     isSrc: false,
-    //     entry: "b",
-    //     isEntryValid: true,
-    //     ext: "ts",
-    //   });
-    // });
-  });
-
-  describe("Multi entries", () => {
-    it("Provides multi files as entries with no extension involved", () => {
-      const filePath = resolve(source, "valid-json-entries-flat");
+    it("Dealing with a valid targeted entry with an extension involved", () => {
+      const filePath = resolve(source, "valid-json-entries-src");
+      const entry = "b.ts";
 
       const res = validateAccess({
         dir: filePath,
-        entry: ["b", "index", "c"],
+        entry,
       });
 
       expect(res).to.deep.equal({
+        dir: filePath,
+        isJsonValid: true,
+        isSrc: true,
+        entry,
+        name: "b",
+        isEntryValid: true,
+        ext: "ts",
+      });
+    });
+  });
+
+  describe.only("Multi entries", () => {
+    it("Provides multi files as entries with no extension involved", () => {
+      const filePath = resolve(source, "valid-json-entries-flat");
+      const entries = ["b", "index", "c"];
+
+      const res = validateAccess({
+        dir: filePath,
+        entry: entries,
+      });
+
+      expect(res).to.deep.equal({
+        dir: filePath,
         isJsonValid: true,
         isSrc: false,
         entries: [
           {
             entry: "b",
             ext: "ts",
+            name: "b",
             isEntryValid: true,
           },
           {
             entry: "index",
             ext: "js",
+            name: "index",
             isEntryValid: true,
           },
           {
             entry: "c",
             ext: "",
+            name: "c",
             isEntryValid: false,
           },
         ],
@@ -300,26 +312,31 @@ describe("Valid", () => {
       });
 
       expect(res).to.deep.equal({
+        dir: filePath,
         isJsonValid: true,
         isSrc: false,
         entries: [
           {
-            entry: "b",
+            entry: "b.ts",
+            name: "b",
             ext: "ts",
             isEntryValid: true,
           },
           {
-            entry: "index",
+            entry: "index.js",
+            name: "index",
             ext: "js",
             isEntryValid: true,
           },
           {
             entry: "c",
+            name: "c",
             ext: "",
             isEntryValid: false,
           },
           {
             entry: "z",
+            name: "z",
             ext: "js",
             isEntryValid: true,
           },
@@ -336,31 +353,37 @@ describe("Valid", () => {
       });
 
       expect(res).to.deep.equal({
+        dir: filePath,
         isJsonValid: true,
         isSrc: true,
         entries: [
           {
-            entry: "z",
+            entry: "src/z",
+            name: "z",
             ext: "js",
             isEntryValid: true,
           },
           {
-            entry: "a",
+            entry: "src/a.js",
+            name: "a",
             ext: "js",
             isEntryValid: true,
           },
           {
-            entry: "index",
+            entry: "src/index.ts",
+            name: "index",
             ext: "ts",
             isEntryValid: false,
           },
           {
-            entry: "index",
+            entry: "src/index.js",
+            name: "index",
             ext: "js",
             isEntryValid: true,
           },
           {
             entry: "src/c",
+            name: "c",
             ext: "",
             isEntryValid: false,
           },
