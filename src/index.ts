@@ -3,26 +3,36 @@
 const fs = require("fs");
 const path = require("path");
 
-const defaultExtensions: string[] = ["js", "ts"];
+const DEFAULT_EXTENSIONS: string[] = ["js", "ts"];
 
 interface Input {
   dir: ".";
   entry?: string;
   srcName: "src";
   isValidateJson: true;
-  extensions: typeof defaultExtensions;
+  extensions: typeof DEFAULT_EXTENSIONS;
 }
 
 interface ParseDir {
   dir: string;
+  subDir: string;
   isSrc: boolean;
+  isJsonValid: boolean | null;
   isEntryValid: boolean;
+  ext: string;
+  name: string;
+}
+
+interface ParseEntry {
+  entry: string;
+  entryDir: string;
   ext: string;
   name: string;
 }
 
 interface Entry {
   entry: string;
+  entryDir: string;
   ext: string;
   name: string;
   isEntryValid: boolean;
@@ -41,18 +51,46 @@ interface ValidationMulti {
   entries: Entry[];
 }
 
+function parseEntry(entry: string): ParseEntry {
+  const { ext, name, dir: entryDir } = path.parse(entry);
+
+  return {
+    entry,
+    entryDir,
+    ext: ext.length === 0 ? ext : ext.split(".")[1],
+    name,
+  };
+}
+
+function validateJSON(
+  dir: string,
+  isValidateJson?: boolean | null
+): boolean | null {
+  return isValidateJson
+    ? fs.existsSync(path.resolve(dir, "package.json"))
+    : null;
+}
+
 function parseDir(
   inputDir: string,
   srcName: string,
-  extensions: string[]
+  extensions: string[],
+  isValidateJson?: boolean
 ): ParseDir {
+  let dir = ".";
+  let subDir = "";
+  let ext = "";
+  let name = "";
+
   if (!inputDir || inputDir.length === 0) {
     return {
-      dir: ".",
+      dir,
+      subDir,
+      isJsonValid: validateJSON(".", isValidateJson),
       isSrc: fs.existsSync(path.resolve(".", srcName)),
       isEntryValid: false,
-      ext: "",
-      name: "",
+      ext,
+      name,
     };
   }
 
@@ -61,12 +99,29 @@ function parseDir(
     ext: extractedExt,
     name: extractedName,
   } = path.parse(inputDir);
+  console.log(
+    "file: index.ts ~ line 91 ~ path.parse(inputDir)",
+    path.parse(inputDir)
+  );
 
-  let dir = extractedDir;
-  let isSrc = false;
+  let entry;
+  let entryDir;
+
+  ({ entry, entryDir, name, ext } = parseEntry(inputDir));
+  console.log("file: index.ts ~ line 111 ~ entry", entry);
+  console.log("file: index.ts ~ line 111 ~ entryDir", entryDir);
+
+  if (entryDir.length > 0) {
+    subDir += ` ${entryDir}`;
+    console.log("file: index.ts ~ line 114 ~ subDir", subDir);
+  }
+
+  dir = extractedDir;
+  ext = extractedExt || "";
+  name = extractedName;
+
   let isEntryValid = false;
-  let ext = extractedExt || "";
-  let name = extractedName;
+  let isSrc = false;
 
   const secondCheck = path.parse(extractedDir);
   if (secondCheck.base === srcName) {
@@ -100,6 +155,8 @@ function parseDir(
 
   const result = {
     dir,
+    subDir: "",
+    isJsonValid: validateJSON(dir, isValidateJson),
     isSrc,
     isEntryValid,
     ext,
@@ -114,40 +171,25 @@ function validateAccess({
   entry: entries,
   srcName = "src",
   isValidateJson = true,
-  extensions = defaultExtensions,
+  extensions = DEFAULT_EXTENSIONS,
 }: Input): ValidationOneEntry | ValidationMulti {
-  const { isSrc, dir } = parseDir(inputDir, srcName, extensions);
+  const { isSrc, isJsonValid, dir } = parseDir(
+    inputDir,
+    srcName,
+    extensions,
+    isValidateJson
+  );
 
   const extractedEntries: Entry[] = [];
 
-  if (entries) {
-    if (Array.isArray(entries) && entries.length > 0) {
-      // parsing entries
-      entries.forEach((entry) => {
-        const { ext, name } = path.parse(entry);
-
-        extractedEntries.push({
-          entry,
-          ext: ext.length === 0 ? ext : ext.split(".")[1],
-          name,
-          isEntryValid: false,
-        });
-      });
-    } else if (entries.length > 0) {
-      const { ext, name } = path.parse(entries);
-
-      extractedEntries.push({
-        entry: entries,
-        ext: ext.length === 0 ? ext : ext.split(".")[1],
-        name,
-        isEntryValid: false,
-      });
-    }
+  if (Array.isArray(entries) && entries.length > 0) {
+    // parsing entries
+    entries.forEach((entry) => {
+      extractedEntries.push({ ...parseEntry(entry), isEntryValid: false });
+    });
   } else {
     extractedEntries.push({
-      entry: "",
-      ext: "",
-      name: "index",
+      ...parseEntry(entries || ""),
       isEntryValid: false,
     });
   }
@@ -185,13 +227,11 @@ function validateAccess({
   return {
     dir,
     isSrc,
-    isJsonValid: isValidateJson
-      ? fs.existsSync(path.resolve(dir, "package.json"))
-      : null,
+    isJsonValid,
     ...(extractedEntries.length === 1
       ? extractedEntries[0]
       : { entries: extractedEntries }),
   };
 }
 
-export { validateAccess };
+export { validateAccess, parseEntry, parseDir };
