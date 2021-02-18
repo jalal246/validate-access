@@ -1,3 +1,5 @@
+/* eslint-disable import/prefer-default-export */
+
 const fs = require("fs");
 const path = require("path");
 
@@ -11,10 +13,19 @@ interface Input {
   extensions: typeof defaultExtensions;
 }
 
+interface ParseDir {
+  dir: string;
+  isSrc: boolean;
+  isEntryValid: boolean;
+  ext: string;
+  name: string;
+}
+
 interface Entry {
   entry: string;
+  ext: string;
+  name: string;
   isEntryValid: boolean;
-  entryExt: string;
 }
 
 interface ValidationOneEntry extends Entry {
@@ -28,27 +39,69 @@ interface ValidationMulti {
   entries: Entry[];
 }
 
-function isEntryFileValid(
+/**
+ * Check if the file has an extension included.
+ *
+ * @param entry
+ * @param srcName
+ */
+function hasSrcName(entry: string, srcName: string): boolean {
+  return entry.includes(srcName);
+}
+
+/**
+ * Check if the file has an extension included.
+ *
+ * @param entry
+ */
+function isFileHasExt(entry: string): boolean {
+  return entry.includes(".");
+}
+
+/**
+ * Check if the path need src to be inserted.
+ *
+ * @param dir
+ * @param isSrc
+ * @param srcName
+ * @param entry
+ */
+function isPathNeedSrc(
+  dir: string,
+  isSrc: boolean,
+  srcName: string,
+  entry: string
+): boolean {
+  return isSrc && (!hasSrcName(dir, srcName) || !hasSrcName(entry, srcName));
+}
+
+/**
+ * Check for entry files existence. Flat structure or in src folder.
+ *
+ * @param dir
+ * @param entry
+ * @param isSrc
+ * @param srcName
+ */
+function isFileExist(
   dir: string,
   entry: string,
   isSrc: boolean,
   srcName: string
-): boolean {
+) {
+  let isFoundInSrc = false;
   // check if exists. Maybe the format is failed but not exist.
-  let isValid = fs.existsSync(path.resolve(dir, entry));
+  let isValid: boolean = fs.existsSync(path.resolve(dir, entry));
 
   // Still invalid? maybe source.
   if (!isValid) {
-    if (isSrc && (!dir.includes(srcName) || !entry.includes(srcName))) {
+    if (isPathNeedSrc(dir, isSrc, srcName, entry)) {
       isValid = fs.existsSync(path.resolve(dir, srcName, entry));
+      isFoundInSrc = isValid;
     }
   }
 
-  return isValid;
-}
-
-function isFileHasExt(entry: string): boolean {
-  return entry.includes(".");
+  return { isValid, isFoundInSrc };
 }
 
 function getNameWithExt(
@@ -67,18 +120,27 @@ function getEntry(
 ): Entry {
   let isEntryValid = false;
   let entryExt = "";
+  let entryFile = entry || dir;
 
   for (let i = 0; i < extensions.length; i += 1) {
     entryExt = extensions[i];
 
-    isEntryValid = entry
-      ? fs.existsSync(path.resolve(dir, `${entry}.${entryExt}`))
-      : fs.existsSync(`${dir}.${entryExt}`);
+    let fileName;
+    let resolvedPath;
+
+    if (entry) {
+      fileName = `${entry}.${entryExt}`;
+      resolvedPath = path.resolve(dir, fileName);
+    } else {
+      fileName = `${dir}.${entryExt}`;
+      resolvedPath = fileName;
+    }
+
+    isEntryValid = fs.existsSync(resolvedPath);
 
     if (isEntryValid) {
       // Covers src/b
-      // eslint-disable-next-line no-param-reassign
-      ({ name: entry } = path.parse(entry ? path.resolve(dir, entry) : dir));
+      ({ name: entryFile } = path.parse(resolvedPath));
 
       break;
     }
@@ -87,8 +149,7 @@ function getEntry(
     entryExt = "";
   }
 
-  // @ts-expect-error
-  return { entry, entryExt, isEntryValid };
+  return { entry: entryFile, entryExt, isEntryValid };
 }
 
 function getSrcWithJsonStatus(
@@ -104,11 +165,162 @@ function getSrcWithJsonStatus(
   };
 }
 
+function parseDir(
+  inputDir: string,
+  srcName: string,
+  extensions: string[]
+): ParseDir {
+  if (!inputDir || inputDir.length === 0) {
+    return {
+      dir: ".",
+      isSrc: fs.existsSync(path.resolve(".", srcName)),
+      isEntryValid: false,
+      ext: "",
+      name: "",
+    };
+  }
+
+  const {
+    dir: extractedDir,
+    ext: extractedExt,
+    name: extractedName,
+  } = path.parse(inputDir);
+
+  let dir = extractedDir;
+  let isSrc = false;
+  let isEntryValid = false;
+  let ext = extractedExt || "";
+  let name = extractedName;
+
+  const secondCheck = path.parse(extractedDir);
+  if (secondCheck.base === srcName) {
+    isSrc = true;
+    dir = secondCheck.dir;
+  } else {
+    name = "";
+  }
+
+  if (extractedExt.length > 0) {
+    isEntryValid = fs.existsSync(inputDir);
+    [, ext] = ext.split(".");
+  } else {
+    // we can't know this earlier we have to check extension first.
+    const isGivenDirValid = fs.existsSync(inputDir);
+
+    if (isGivenDirValid) {
+      dir = inputDir;
+    }
+
+    for (let j = 0; j < extensions.length; j += 1) {
+      isEntryValid = fs.existsSync(`${extractedDir}.${extensions[j]}`);
+
+      if (isEntryValid) {
+        ext = extensions[j];
+        break;
+      }
+    }
+  }
+
+  const result = {
+    dir,
+    isSrc,
+    isEntryValid,
+    ext,
+    name,
+  };
+
+  return result;
+}
+
+function validateAccess({
+  dir: inputDir,
+  entry: entries,
+  srcName = "src",
+  isValidateJson = true,
+  extensions = defaultExtensions,
+}: Input): ValidationOneEntry | ValidationMulti {
+  const { isSrc, dir } = parseDir(inputDir, srcName, extensions);
+
+  const extractedEntries: Entry[] = [];
+
+  if (entries) {
+    if (Array.isArray(entries) && entries.length > 0) {
+      // parsing entries
+      entries.forEach((entry) => {
+        const { ext, name } = path.parse(entry);
+
+        extractedEntries.push({
+          entry,
+          ext: ext.length === 0 ? ext : ext.split(".")[1],
+          name,
+          isEntryValid: false,
+        });
+      });
+    } else if (entries.length > 0) {
+      const { ext, name } = path.parse(entries);
+
+      extractedEntries.push({
+        entry: entries,
+        ext: ext.length === 0 ? ext : ext.split(".")[1],
+        name,
+        isEntryValid: false,
+      });
+    }
+  } else {
+    extractedEntries.push({
+      entry: "",
+      ext: "",
+      name: "index",
+      isEntryValid: false,
+    });
+  }
+
+  const pathWithSrc = isSrc ? path.resolve(dir, srcName) : dir;
+
+  for (let i = 0; i < extractedEntries.length; i += 1) {
+    const { name, ext } = extractedEntries[i];
+
+    if (ext.length === 0) {
+      for (let j = 0; j < extensions.length; j += 1) {
+        const resolvedPath = path.resolve(
+          pathWithSrc,
+          `${name}.${extensions[j]}`
+        );
+        const isEntryValid = fs.existsSync(resolvedPath);
+
+        if (isEntryValid) {
+          extractedEntries[i].ext = extensions[j];
+          extractedEntries[i].isEntryValid = true;
+
+          break;
+        }
+      }
+    } else {
+      const resolvedPath = path.resolve(pathWithSrc, `${name}.${ext}`);
+      const isEntryValid = fs.existsSync(resolvedPath);
+
+      if (isEntryValid) {
+        extractedEntries[i].isEntryValid = true;
+      }
+    }
+  }
+
+  return {
+    isSrc,
+    isJsonValid: isValidateJson
+      ? fs.existsSync(path.resolve(dir, "package.json"))
+      : null,
+    ...(extractedEntries.length === 1
+      ? extractedEntries[0]
+      : { entries: extractedEntries }),
+  };
+}
+
 /**
  * Validates access readability  for `package.json` and project entry if
  * provided.
  */
-function validateAccess({
+function validateAccessDraft({
   dir: inputDir,
   entry: inputEntry,
   srcName = "src",
@@ -121,43 +333,7 @@ function validateAccess({
   let name: string;
   let ext: string;
 
-  if (inputDir) {
-    // if this dir has also the file entry. covering a special case.
-    ({ name, ext } = path.parse(inputDir));
-
-    const hasExt = ext.length !== 0;
-    const isSrcPathFromDir: boolean = inputDir.length > 0;
-
-    if (hasExt || isSrcPathFromDir) {
-      dir = inputDir;
-
-      // if this dir includes Json & src
-      result = getSrcWithJsonStatus(dir, srcName, isValidateJson);
-
-      if (hasExt) {
-        return Object.assign(result, {
-          entry: name,
-          isEntryValid: fs.existsSync(dir),
-          entryExt: ext.split(".")[1],
-        });
-      }
-      const dirPossibilities = ["index", null];
-
-      if (!inputEntry || inputEntry.length === 0) {
-        for (let i = 0; i < dirPossibilities.length; i += 1) {
-          const entryFile = dirPossibilities[i];
-
-          // then, check dir as it's supposed comes with a file include but without
-          // extension
-          const entry = getEntry(extensions, dir, entryFile);
-
-          if (entry.isEntryValid) {
-            return Object.assign(result, entry);
-          }
-        }
-      }
-    }
-  } else {
+  if (!inputDir || inputDir.length === 0) {
     // no directory, then look into the root as a default.
     dir = ".";
 
@@ -166,12 +342,58 @@ function validateAccess({
     if (result.isSrc) {
       dir = path.resolve(dir, srcName);
     }
+
+    const entry = checkExistenceInDir(
+      extensions,
+      dir,
+      srcName,
+      result.isSrc,
+      inputEntry
+    );
+
+    if (Array.isArray(entry)) {
+      return Object.assign(result, { entries: entry });
+    }
+
+    if (entry.isEntryValid) {
+      return Object.assign(result, entry);
+    }
+  } else {
+    dir = inputDir;
+
+    // if this dir has also the file entry. covering a special case.
+    ({ name, ext } = path.parse(inputDir));
+
+    // if this dir includes Json & src
+    result = getSrcWithJsonStatus(dir, srcName, isValidateJson);
+
+    if (ext.length !== 0) {
+      return Object.assign(result, {
+        entry: name,
+        isEntryValid: fs.existsSync(inputDir),
+        entryExt: ext.split(".")[1],
+      });
+    }
+
+    if (!inputEntry || inputEntry.length === 0) {
+      const entry = checkExistenceInDir(
+        extensions,
+        dir,
+        srcName,
+        result.isSrc,
+        inputEntry
+      );
+
+      if (entry.isEntryValid) {
+        return Object.assign(result, entry);
+      }
+    }
   }
 
   // output entries
   const entries: Entry[] = [];
 
-  let inputEntries: Array<string | null>;
+  let inputEntries: Array<string>;
 
   if (inputEntry) {
     if (typeof inputEntry === "string") {
@@ -180,8 +402,8 @@ function validateAccess({
       inputEntries = inputEntry;
     }
   } else {
-    // two choice.
     inputEntries = ["index"];
+    // two choice.
   }
 
   inputEntries.forEach((entryFile) => {
@@ -191,13 +413,18 @@ function validateAccess({
     ext = "";
 
     // extension is embedded
-    if (entryFile && isFileHasExt(entryFile)) {
+    if (isFileHasExt(entryFile)) {
       ({ name, ext } = getNameWithExt(dir, entryFile));
 
       // has a valid extension
       if (ext.length !== 0) {
         // check if exists. Maybe the format is failed but not exist.
-        isEntryValid = isEntryFileValid(dir, entryFile, result.isSrc, srcName);
+        ({ isValid: isEntryValid } = isFileExist(
+          dir,
+          entryFile,
+          result.isSrc,
+          srcName
+        ));
 
         [, ext] = ext.split(".");
       }
@@ -215,12 +442,8 @@ function validateAccess({
   });
 
   return entries.length === 1
-    ? // @ts-expect-error
-      Object.assign(result, entries[0])
-    : // @ts-expect-error
-      Object.assign(result, { entries });
+    ? Object.assign(result, entries[0])
+    : Object.assign(result, { entries });
 }
 
-module.exports = {
-  validateAccess,
-};
+export { validateAccess };

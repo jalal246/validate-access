@@ -8,20 +8,86 @@ const { validateAccess } = require("../lib");
 const source = resolve(__dirname, "fixtures");
 
 describe("Valid", () => {
-  it("Default args", () => {
-    const res = validateAccess({});
+  describe("No directory but only entry", () => {
+    it.only("Default args", () => {
+      const res = validateAccess({});
 
-    expect(res).to.deep.equal({
-      isJsonValid: true,
-      isSrc: true,
-      entry: "index",
-      isEntryValid: true,
-      entryExt: "ts",
+      expect(res).to.deep.equal({
+        isJsonValid: true,
+        isSrc: true,
+        isEntryValid: true,
+        entry: "",
+        name: "index",
+        ext: "ts",
+      });
+    });
+
+    it.only("Specify one input", () => {
+      const res = validateAccess({ entry: "index" });
+
+      expect(res).to.deep.equal({
+        isJsonValid: true,
+        isSrc: true,
+        isEntryValid: true,
+        entry: "index",
+        name: "index",
+        ext: "ts",
+      });
+    });
+
+    it.only("Specify one input in an array", () => {
+      const res = validateAccess({ entry: ["index"] });
+
+      expect(res).to.deep.equal({
+        isJsonValid: true,
+        isSrc: true,
+        entry: "index",
+        name: "index",
+        isEntryValid: true,
+        ext: "ts",
+      });
+    });
+
+    it.only("Specify multi inputs", () => {
+      const res = validateAccess({
+        entry: ["a.js", "index", "src/index", "src/index.js"],
+      });
+
+      expect(res).to.deep.equal({
+        isJsonValid: true,
+        isSrc: true,
+        entries: [
+          {
+            entry: "a.js",
+            name: "a",
+            isEntryValid: false,
+            ext: "js",
+          },
+          {
+            entry: "index",
+            name: "index",
+            isEntryValid: true,
+            ext: "ts",
+          },
+          {
+            entry: "src/index",
+            name: "index",
+            isEntryValid: true,
+            ext: "ts",
+          },
+          {
+            entry: "src/index.js",
+            name: "index",
+            isEntryValid: false,
+            ext: "js",
+          },
+        ],
+      });
     });
   });
 
   describe("Only valid json", () => {
-    it("Dealing with directory only as input", () => {
+    it.only("Dealing with directory only as input", () => {
       const filePath = resolve(source, "valid-json");
 
       const res = validateAccess({ dir: filePath });
@@ -29,13 +95,14 @@ describe("Valid", () => {
       expect(res).to.deep.equal({
         isJsonValid: true,
         isSrc: false,
-        entry: "index",
+        entry: "",
+        name: "index",
         isEntryValid: false,
-        entryExt: "",
+        ext: "",
       });
     });
 
-    it("Dealing with directory and entry as input", () => {
+    it.only("Dealing with directory and entry as input", () => {
       const filePath = resolve(source, "valid-json");
 
       const res = validateAccess({ dir: filePath, entry: "b.ts" });
@@ -43,13 +110,14 @@ describe("Valid", () => {
       expect(res).to.deep.equal({
         isJsonValid: true,
         isSrc: false,
-        entry: "b",
+        entry: "b.ts",
+        name: "b",
         isEntryValid: false,
-        entryExt: "ts",
+        ext: "ts",
       });
     });
 
-    it("Dealing with directory and entry as input contains src", () => {
+    it.only("Dealing with directory and entry as input contains src", () => {
       const filePath = resolve(source, "valid-json");
 
       const res = validateAccess({ dir: filePath, entry: "./src/b.ts" });
@@ -57,15 +125,16 @@ describe("Valid", () => {
       expect(res).to.deep.equal({
         isJsonValid: true,
         isSrc: false,
-        entry: "b",
+        entry: "./src/b.ts",
+        name: "b",
         isEntryValid: false,
-        entryExt: "ts",
+        ext: "ts",
       });
     });
   });
 
   describe("All valid in flat structure ", () => {
-    it("Dealing with directory only as input", () => {
+    it.only("Dealing with directory only as input", () => {
       const filePath = resolve(source, "valid-json-entries-flat");
 
       const res = validateAccess({
@@ -75,13 +144,14 @@ describe("Valid", () => {
       expect(res).to.deep.equal({
         isJsonValid: true,
         isSrc: false,
-        entry: "index",
+        entry: "",
+        name: "index",
         isEntryValid: true,
-        entryExt: "js",
+        ext: "js",
       });
     });
 
-    it("Dealing with a valid targeted entry no extension involved", () => {
+    it.only("Dealing with a valid targeted entry no extension involved", () => {
       const filePath = resolve(source, "valid-json-entries-flat");
 
       const res = validateAccess({
@@ -93,12 +163,13 @@ describe("Valid", () => {
         isJsonValid: true,
         isSrc: false,
         entry: "b",
+        name: "b",
         isEntryValid: true,
-        entryExt: "ts",
+        ext: "ts",
       });
     });
 
-    it("Dealing with a valid targeted entry with an extension involved", () => {
+    it.only("Dealing with a valid targeted entry with an extension involved", () => {
       const filePath = resolve(source, "valid-json-entries-flat");
 
       const res = validateAccess({
@@ -109,11 +180,65 @@ describe("Valid", () => {
       expect(res).to.deep.equal({
         isJsonValid: true,
         isSrc: false,
-        entry: "b",
+        entry: "b.ts",
+        name: "b",
         isEntryValid: true,
-        entryExt: "ts",
+        ext: "ts",
       });
     });
+  });
+
+  describe("All valid project with src structure", () => {
+    it.only("Dealing with directory only as input", () => {
+      const filePath = resolve(source, "valid-json-entries-src");
+
+      const res = validateAccess({
+        dir: filePath,
+      });
+
+      expect(res).to.deep.equal({
+        isJsonValid: true,
+        isSrc: true,
+        entry: "",
+        name: "index",
+        isEntryValid: true,
+        ext: "js",
+      });
+    });
+
+    it.skip("Dealing with a valid targeted entry no extension involved", () => {
+      const filePath = resolve(source, "valid-json-entries-src");
+
+      const res = validateAccess({
+        dir: filePath,
+        entry: "b",
+      });
+
+      expect(res).to.deep.equal({
+        isJsonValid: true,
+        isSrc: false,
+        entry: "b",
+        isEntryValid: true,
+        ext: "ts",
+      });
+    });
+
+    // it("Dealing with a valid targeted entry with an extension involved", () => {
+    //   const filePath = resolve(source, "valid-json-entries-src");
+
+    //   const res = validateAccess({
+    //     dir: filePath,
+    //     entry: "b.ts",
+    //   });
+
+    //   expect(res).to.deep.equal({
+    //     isJsonValid: true,
+    //     isSrc: false,
+    //     entry: "b",
+    //     isEntryValid: true,
+    //     ext: "ts",
+    //   });
+    // });
   });
 
   describe("Multi entries", () => {
@@ -131,17 +256,17 @@ describe("Valid", () => {
         entries: [
           {
             entry: "b",
-            entryExt: "ts",
+            ext: "ts",
             isEntryValid: true,
           },
           {
             entry: "index",
-            entryExt: "js",
+            ext: "js",
             isEntryValid: true,
           },
           {
             entry: "c",
-            entryExt: "",
+            ext: "",
             isEntryValid: false,
           },
         ],
@@ -162,22 +287,22 @@ describe("Valid", () => {
         entries: [
           {
             entry: "b",
-            entryExt: "ts",
+            ext: "ts",
             isEntryValid: true,
           },
           {
             entry: "index",
-            entryExt: "js",
+            ext: "js",
             isEntryValid: true,
           },
           {
             entry: "c",
-            entryExt: "",
+            ext: "",
             isEntryValid: false,
           },
           {
             entry: "z",
-            entryExt: "js",
+            ext: "js",
             isEntryValid: true,
           },
         ],
@@ -198,27 +323,27 @@ describe("Valid", () => {
         entries: [
           {
             entry: "z",
-            entryExt: "js",
+            ext: "js",
             isEntryValid: true,
           },
           {
             entry: "a",
-            entryExt: "js",
+            ext: "js",
             isEntryValid: true,
           },
           {
             entry: "index",
-            entryExt: "ts",
+            ext: "ts",
             isEntryValid: false,
           },
           {
             entry: "index",
-            entryExt: "js",
+            ext: "js",
             isEntryValid: true,
           },
           {
             entry: "src/c",
-            entryExt: "",
+            ext: "",
             isEntryValid: false,
           },
         ],
@@ -241,7 +366,7 @@ describe("Valid", () => {
           isSrc: true,
           entry: "a",
           isEntryValid: true,
-          entryExt: "js",
+          ext: "js",
         });
       });
 
@@ -258,7 +383,7 @@ describe("Valid", () => {
           isSrc: true,
           entry: "a",
           isEntryValid: true,
-          entryExt: "js",
+          ext: "js",
         });
       });
 
@@ -275,7 +400,7 @@ describe("Valid", () => {
           isSrc: true,
           entry: "a",
           isEntryValid: true,
-          entryExt: "js",
+          ext: "js",
         });
       });
     });
@@ -298,7 +423,7 @@ describe("Valid", () => {
           isSrc: false,
           entry: "b",
           isEntryValid: true,
-          entryExt: "ts",
+          ext: "ts",
         });
       });
 
@@ -314,7 +439,7 @@ describe("Valid", () => {
           isSrc: false,
           entry: "b",
           isEntryValid: true,
-          entryExt: "ts",
+          ext: "ts",
         });
       });
 
@@ -335,7 +460,7 @@ describe("Valid", () => {
           isSrc: false,
           entry: "b",
           isEntryValid: false,
-          entryExt: "js",
+          ext: "js",
         });
       });
 
@@ -356,7 +481,7 @@ describe("Valid", () => {
           isSrc: false,
           entry: "c",
           isEntryValid: false,
-          entryExt: "js",
+          ext: "js",
         });
       });
     });
@@ -375,7 +500,7 @@ describe("Valid", () => {
       isSrc: true,
       entry: "b",
       isEntryValid: true,
-      entryExt: "ts",
+      ext: "ts",
     });
   });
 });
