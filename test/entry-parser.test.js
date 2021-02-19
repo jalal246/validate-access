@@ -142,6 +142,7 @@ describe("Entry Parser", () => {
         ext: "",
       });
     });
+
     it("Entry with src/folder and extension", () => {
       const fullEntry = resolve("src", "lib", "a.jsx");
       const entryDir = resolve("src", "lib");

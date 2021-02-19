@@ -1,9 +1,11 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable import/prefer-default-export */
 
 const fs = require("fs");
 const path = require("path");
 
 const DEFAULT_EXTENSIONS: string[] = ["js", "ts"];
+const DEFAULT_DIR_FOLDERS: string[] = ["src", "lib", "dist"];
 
 interface Input {
   dir: ".";
@@ -18,7 +20,7 @@ interface ParseDir {
   subDir: string;
   isSrc: boolean;
   isJsonValid: boolean | null;
-  isEntryValid: boolean;
+  includeValidEntry: boolean;
   ext: string;
   name: string;
 }
@@ -30,11 +32,7 @@ interface ParseEntry {
   name: string;
 }
 
-interface Entry {
-  entry: string;
-  entryDir: string;
-  ext: string;
-  name: string;
+interface Entry extends ParseEntry {
   isEntryValid: boolean;
 }
 
@@ -88,82 +86,113 @@ function parseDir(
       subDir,
       isJsonValid: validateJSON(".", isValidateJson),
       isSrc: fs.existsSync(path.resolve(".", srcName)),
-      isEntryValid: false,
+      includeValidEntry: false,
       ext,
       name,
     };
   }
 
-  const {
-    dir: extractedDir,
-    ext: extractedExt,
-    name: extractedName,
-  } = path.parse(inputDir);
-  console.log(
-    "file: index.ts ~ line 91 ~ path.parse(inputDir)",
-    path.parse(inputDir)
-  );
+  let base = "";
 
-  let entry;
-  let entryDir;
-
-  ({ entry, entryDir, name, ext } = parseEntry(inputDir));
-  console.log("file: index.ts ~ line 111 ~ entry", entry);
-  console.log("file: index.ts ~ line 111 ~ entryDir", entryDir);
-
-  if (entryDir.length > 0) {
-    subDir += ` ${entryDir}`;
-    console.log("file: index.ts ~ line 114 ~ subDir", subDir);
-  }
-
-  dir = extractedDir;
-  ext = extractedExt || "";
-  name = extractedName;
-
-  let isEntryValid = false;
   let isSrc = false;
+  let includeValidEntry = false;
 
-  const secondCheck = path.parse(extractedDir);
-  if (secondCheck.base === srcName) {
-    isSrc = true;
-    dir = secondCheck.dir;
-  } else {
-    name = "";
-  }
+  ({ dir, ext, name, base } = path.parse(inputDir));
 
-  if (extractedExt.length > 0) {
-    isEntryValid = fs.existsSync(inputDir);
+  if (ext.length > 0) {
+    // to/[folder]/file.js
     [, ext] = ext.split(".");
-  } else {
-    // we can't know this earlier we have to check extension first.
-    const isGivenDirValid = fs.existsSync(inputDir);
+    includeValidEntry = fs.existsSync(inputDir);
 
-    if (isGivenDirValid) {
-      dir = inputDir;
-      isSrc = fs.existsSync(path.resolve(dir, srcName));
+    ({ dir, name: subDir, base } = path.parse(dir));
+
+    for (let i = 0; i < DEFAULT_DIR_FOLDERS.length; i += 1) {
+      if (subDir === DEFAULT_DIR_FOLDERS[i]) {
+        isSrc = true;
+        break;
+      }
     }
 
-    for (let j = 0; j < extensions.length; j += 1) {
-      isEntryValid = fs.existsSync(`${extractedDir}.${extensions[j]}`);
+    if (!isSrc) {
+      // Wrong subDir. Undo
+      subDir = "";
+      ({ dir } = path.parse(inputDir));
+    }
+  } else {
+    // no extension, no name
+    name = "";
 
-      if (isEntryValid) {
-        ext = extensions[j];
+    for (let i = 0; i < DEFAULT_DIR_FOLDERS.length; i += 1) {
+      if (base === DEFAULT_DIR_FOLDERS[i]) {
+        subDir = DEFAULT_DIR_FOLDERS[i];
+        isSrc = true;
         break;
+      }
+    }
+
+    if (subDir.length === 0) {
+      // undo parsing
+      dir = inputDir;
+
+      // maybe :
+      // to/src/b or  to/b or to
+      for (let j = 0; j < extensions.length; j += 1) {
+        includeValidEntry = fs.existsSync(`${dir}.${extensions[j]}`);
+
+        if (includeValidEntry) {
+          return parseDir(
+            `${dir}.${extensions[j]}`,
+            srcName,
+            extensions,
+            isValidateJson
+          );
+        }
       }
     }
   }
 
   const result = {
     dir,
-    subDir: "",
+    subDir,
     isJsonValid: validateJSON(dir, isValidateJson),
     isSrc,
-    isEntryValid,
+    includeValidEntry,
     ext,
     name,
   };
 
   return result;
+}
+
+function validateEntry(
+  entry: Entry,
+  extensions: string[],
+  workingDir: string
+): Entry {
+  const { name, ext } = entry;
+
+  if (ext.length === 0) {
+    for (let j = 0; j < extensions.length; j += 1) {
+      const resolvedPath = path.resolve(workingDir, `${name}.${extensions[j]}`);
+      const isEntryValid = fs.existsSync(resolvedPath);
+
+      if (isEntryValid) {
+        entry.ext = extensions[j];
+        entry.isEntryValid = true;
+
+        break;
+      }
+    }
+  } else {
+    const resolvedPath = path.resolve(workingDir, `${name}.${ext}`);
+    const isEntryValid = fs.existsSync(resolvedPath);
+
+    if (isEntryValid) {
+      entry.isEntryValid = true;
+    }
+  }
+
+  return entry;
 }
 
 function validateAccess({
@@ -173,12 +202,28 @@ function validateAccess({
   isValidateJson = true,
   extensions = DEFAULT_EXTENSIONS,
 }: Input): ValidationOneEntry | ValidationMulti {
-  const { isSrc, isJsonValid, dir } = parseDir(
-    inputDir,
-    srcName,
-    extensions,
-    isValidateJson
-  );
+  const {
+    dir,
+    subDir,
+    isJsonValid,
+    isSrc,
+    includeValidEntry,
+    ext: extDir,
+    name: nameDir,
+  } = parseDir(inputDir, srcName, extensions, isValidateJson);
+
+  if (includeValidEntry) {
+    return {
+      dir,
+      entryDir: subDir,
+      entry: dir,
+      isSrc,
+      isJsonValid,
+      isEntryValid: true,
+      ext: extDir,
+      name: nameDir,
+    };
+  }
 
   const extractedEntries: Entry[] = [];
 
@@ -194,7 +239,7 @@ function validateAccess({
     });
   }
 
-  const pathWithSrc = isSrc ? path.resolve(dir, srcName) : dir;
+  const workingPath = subDir ? path.resolve(dir, subDir) : dir;
 
   for (let i = 0; i < extractedEntries.length; i += 1) {
     const { name, ext } = extractedEntries[i];
@@ -202,7 +247,7 @@ function validateAccess({
     if (ext.length === 0) {
       for (let j = 0; j < extensions.length; j += 1) {
         const resolvedPath = path.resolve(
-          pathWithSrc,
+          workingPath,
           `${name}.${extensions[j]}`
         );
         const isEntryValid = fs.existsSync(resolvedPath);
@@ -215,7 +260,7 @@ function validateAccess({
         }
       }
     } else {
-      const resolvedPath = path.resolve(pathWithSrc, `${name}.${ext}`);
+      const resolvedPath = path.resolve(workingPath, `${name}.${ext}`);
       const isEntryValid = fs.existsSync(resolvedPath);
 
       if (isEntryValid) {

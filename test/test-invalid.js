@@ -7,19 +7,6 @@
 // const source = resolve(__dirname, "fixtures");
 
 // describe("invalid", () => {
-//   it("invalid json", () => {
-//     const filePath = resolve(source, "invalid-json");
-
-//     const res = validateAccess({ dir: filePath });
-
-//     expect(res).to.deep.equal({
-//       isJsonValid: false,
-//       isSrc: false,
-//       entry: "index",
-//       isEntryValid: true,
-//       entryExt: "js",
-//     });
-//   });
 
 //   it("invalid json entries-flat", () => {
 //     const filePath = resolve(source, "invalid-entries-flat");
