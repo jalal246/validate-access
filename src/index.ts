@@ -6,6 +6,7 @@ const path = require("path");
 
 const DEFAULT_EXTENSIONS: string[] = ["js", "ts"];
 const DEFAULT_DIR_FOLDERS: string[] = ["src", "lib", "dist"];
+const PKG_JSON = "package.json";
 
 interface Input {
   dir: ".";
@@ -19,6 +20,7 @@ interface ParseDir {
   dir: string;
   subDir: string;
   isSrc: boolean;
+  srcName: string;
   isJsonValid: boolean | null;
   includeValidEntry: boolean;
   ext: string;
@@ -49,6 +51,43 @@ interface ValidationMulti {
   entries: Entry[];
 }
 
+function validatorMatchInLoop(
+  arr: string[],
+  // eslint-disable-next-line no-unused-vars
+  validator: (arg: string) => boolean
+) {
+  let isFound = false;
+  let str = "";
+
+  for (let i = 0; i < arr.length; i += 1) {
+    str = arr[i];
+
+    if (validator(str)) {
+      isFound = true;
+      break;
+    }
+  }
+
+  return { isFound, match: str };
+}
+
+function strMatchInLoop(arr: string[], str: string) {
+  let isFound = false;
+
+  for (let i = 0; i < arr.length; i += 1) {
+    if (str === arr[i]) {
+      isFound = true;
+      break;
+    }
+  }
+
+  return { isFound, match: isFound ? str : "" };
+}
+
+function validate(dir: string, fName?: string): boolean {
+  return fs.existsSync(fName ? path.resolve(dir, fName) : dir);
+}
+
 function parseEntry(entry: string): ParseEntry {
   const { ext, name, dir: entryDir } = path.parse(entry);
 
@@ -60,32 +99,35 @@ function parseEntry(entry: string): ParseEntry {
   };
 }
 
-function validateJSON(
-  dir: string,
-  isValidateJson?: boolean | null
-): boolean | null {
-  return isValidateJson
-    ? fs.existsSync(path.resolve(dir, "package.json"))
-    : null;
-}
-
 function parseDir(
   inputDir: string,
-  srcName: string,
-  extensions: string[],
-  isValidateJson?: boolean
+  subFoldersNames: string[] = DEFAULT_DIR_FOLDERS,
+  extensions: string[] = DEFAULT_EXTENSIONS,
+  isValidateJson: boolean = true
 ): ParseDir {
   let dir = ".";
   let subDir = "";
+  let srcName = "";
   let ext = "";
   let name = "";
 
+  let isSrc = false;
+  let isJsonValid: boolean | null = false;
+
   if (!inputDir || inputDir.length === 0) {
+    ({ isFound: isSrc, match: srcName } = validatorMatchInLoop(
+      subFoldersNames,
+      validate.bind(".")
+    ));
+
+    isJsonValid = isValidateJson ? validate(dir, PKG_JSON) : null;
+
     return {
       dir,
       subDir,
-      isJsonValid: validateJSON(".", isValidateJson),
-      isSrc: fs.existsSync(path.resolve(".", srcName)),
+      isJsonValid,
+      isSrc,
+      srcName,
       includeValidEntry: false,
       ext,
       name,
@@ -94,7 +136,6 @@ function parseDir(
 
   let base = "";
 
-  let isSrc = false;
   let includeValidEntry = false;
 
   ({ dir, ext, name, base } = path.parse(inputDir));
@@ -102,16 +143,14 @@ function parseDir(
   if (ext.length > 0) {
     // to/[folder]/file.js
     [, ext] = ext.split(".");
-    includeValidEntry = fs.existsSync(inputDir);
+    includeValidEntry = validate(inputDir);
 
     ({ dir, name: subDir, base } = path.parse(dir));
 
-    for (let i = 0; i < DEFAULT_DIR_FOLDERS.length; i += 1) {
-      if (subDir === DEFAULT_DIR_FOLDERS[i]) {
-        isSrc = true;
-        break;
-      }
-    }
+    ({ isFound: isSrc, match: srcName } = strMatchInLoop(
+      subFoldersNames,
+      subDir
+    ));
 
     if (!isSrc) {
       // Wrong subDir. Undo
@@ -122,13 +161,8 @@ function parseDir(
     // no extension, no name
     name = "";
 
-    for (let i = 0; i < DEFAULT_DIR_FOLDERS.length; i += 1) {
-      if (base === DEFAULT_DIR_FOLDERS[i]) {
-        subDir = DEFAULT_DIR_FOLDERS[i];
-        isSrc = true;
-        break;
-      }
-    }
+    ({ isFound: isSrc, match: subDir } = strMatchInLoop(subFoldersNames, base));
+    srcName = subDir;
 
     if (subDir.length === 0) {
       // undo parsing
@@ -137,12 +171,12 @@ function parseDir(
       // maybe :
       // to/src/b or  to/b or to
       for (let j = 0; j < extensions.length; j += 1) {
-        includeValidEntry = fs.existsSync(`${dir}.${extensions[j]}`);
+        includeValidEntry = validate(`${dir}.${extensions[j]}`);
 
         if (includeValidEntry) {
           return parseDir(
             `${dir}.${extensions[j]}`,
-            srcName,
+            subFoldersNames,
             extensions,
             isValidateJson
           );
@@ -151,11 +185,14 @@ function parseDir(
     }
   }
 
+  isJsonValid = isValidateJson ? validate(dir, PKG_JSON) : null;
+
   const result = {
     dir,
     subDir,
-    isJsonValid: validateJSON(dir, isValidateJson),
+    isJsonValid,
     isSrc,
+    srcName,
     includeValidEntry,
     ext,
     name,

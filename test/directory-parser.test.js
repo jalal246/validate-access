@@ -1,30 +1,20 @@
 const { expect } = require("chai");
 const { resolve } = require("path");
 
-// @ts-checks
 const { parseDir } = require("../lib");
 
 const source = resolve(__dirname, "fixtures");
 
-const DEFAULT_EXTENSIONS = ["js", "ts"];
-
 describe("Directory Parser", () => {
-  const DEFAULT_SRC_NAME = "src";
-  const IS_VALIDATE_JSON = true;
-
   describe("Directory includes root only", () => {
     it("with default", () => {
-      const res = parseDir(
-        "",
-        DEFAULT_SRC_NAME,
-        DEFAULT_EXTENSIONS,
-        IS_VALIDATE_JSON
-      );
+      const res = parseDir("");
 
       expect(res).to.deep.equal({
         dir: ".",
         subDir: "",
         isSrc: true,
+        srcName: "src",
         isJsonValid: true,
         includeValidEntry: false,
         ext: "",
@@ -35,17 +25,13 @@ describe("Directory Parser", () => {
     it("with only a valid json", () => {
       const filePath = resolve(source, "valid-json");
 
-      const res = parseDir(
-        filePath,
-        DEFAULT_SRC_NAME,
-        DEFAULT_EXTENSIONS,
-        IS_VALIDATE_JSON
-      );
+      const res = parseDir(filePath);
 
       expect(res).to.deep.equal({
         dir: filePath,
         subDir: "",
         isSrc: false,
+        srcName: "",
         isJsonValid: true,
         includeValidEntry: false,
         ext: "",
@@ -56,17 +42,13 @@ describe("Directory Parser", () => {
     it("with a valid json in a flat structure", () => {
       const filePath = resolve(source, "valid-json-entries-flat");
 
-      const res = parseDir(
-        filePath,
-        DEFAULT_SRC_NAME,
-        DEFAULT_EXTENSIONS,
-        IS_VALIDATE_JSON
-      );
+      const res = parseDir(filePath);
 
       expect(res).to.deep.equal({
         dir: filePath,
         subDir: "",
         isSrc: false,
+        srcName: "",
         isJsonValid: true,
         includeValidEntry: false,
         ext: "",
@@ -78,19 +60,16 @@ describe("Directory Parser", () => {
   describe("Directory includes root and sub dir only", () => {
     it("with src as a sub dir", () => {
       const expectedPath = resolve(source, "valid-json-entries-flat");
+      const subDir = "src";
       const filePath = resolve(source, "valid-json-entries-flat", "src");
 
-      const res = parseDir(
-        filePath,
-        DEFAULT_SRC_NAME,
-        DEFAULT_EXTENSIONS,
-        IS_VALIDATE_JSON
-      );
+      const res = parseDir(filePath);
 
       expect(res).to.deep.equal({
         dir: expectedPath,
-        subDir: "src",
+        subDir,
         isSrc: true,
+        srcName: subDir,
         isJsonValid: true,
         includeValidEntry: false,
         ext: "",
@@ -103,17 +82,13 @@ describe("Directory Parser", () => {
       const subDir = "lib";
       const filePath = resolve(source, "valid-json-entry-lib", subDir);
 
-      const res = parseDir(
-        filePath,
-        DEFAULT_SRC_NAME,
-        DEFAULT_EXTENSIONS,
-        IS_VALIDATE_JSON
-      );
+      const res = parseDir(filePath);
 
       expect(res).to.deep.equal({
         dir: expectedPath,
         subDir,
         isSrc: true,
+        srcName: subDir,
         isJsonValid: true,
         includeValidEntry: false,
         ext: "",
@@ -125,17 +100,13 @@ describe("Directory Parser", () => {
       const subDir = "test";
       const filePath = resolve(source, "valid-json-entry-lib", subDir);
 
-      const res = parseDir(
-        filePath,
-        DEFAULT_SRC_NAME,
-        DEFAULT_EXTENSIONS,
-        IS_VALIDATE_JSON
-      );
+      const res = parseDir(filePath);
 
       expect(res).to.deep.equal({
         dir: filePath,
         subDir: "",
         isSrc: false,
+        srcName: "",
         isJsonValid: false,
         includeValidEntry: false,
         ext: "",
@@ -150,17 +121,13 @@ describe("Directory Parser", () => {
       const subDir = "lib";
       const filePath = resolve(source, "valid-json-entry-lib", subDir, "b.ts");
 
-      const res = parseDir(
-        filePath,
-        DEFAULT_SRC_NAME,
-        DEFAULT_EXTENSIONS,
-        IS_VALIDATE_JSON
-      );
+      const res = parseDir(filePath);
 
       expect(res).to.deep.equal({
         dir: expectedPath,
         subDir,
         isSrc: true,
+        srcName: subDir,
         isJsonValid: true,
         includeValidEntry: true,
         ext: "ts",
@@ -173,17 +140,13 @@ describe("Directory Parser", () => {
       const subDir = "lib";
       const filePath = resolve(source, "valid-json-entry-lib", subDir, "b");
 
-      const res = parseDir(
-        filePath,
-        DEFAULT_SRC_NAME,
-        DEFAULT_EXTENSIONS,
-        IS_VALIDATE_JSON
-      );
+      const res = parseDir(filePath);
 
       expect(res).to.deep.equal({
         dir: expectedPath,
         subDir,
         isSrc: true,
+        srcName: subDir,
         isJsonValid: true,
         includeValidEntry: true,
         ext: "ts",
@@ -194,17 +157,13 @@ describe("Directory Parser", () => {
     it("with unrecognized sub folder[test] and without an extension", () => {
       const filePath = resolve(source, "valid-json-entry-lib", "test", "b");
 
-      const res = parseDir(
-        filePath,
-        DEFAULT_SRC_NAME,
-        DEFAULT_EXTENSIONS,
-        IS_VALIDATE_JSON
-      );
+      const res = parseDir(filePath);
 
       expect(res).to.deep.equal({
         dir: resolve(source, "valid-json-entry-lib", "test"),
         subDir: "",
         isSrc: false,
+        srcName: "",
         isJsonValid: false,
         includeValidEntry: true,
         ext: "ts",
@@ -215,17 +174,13 @@ describe("Directory Parser", () => {
     it("with unrecognized sub folder[test] but with an extension", () => {
       const filePath = resolve(source, "valid-json-entry-lib", "test", "b.ts");
 
-      const res = parseDir(
-        filePath,
-        DEFAULT_SRC_NAME,
-        DEFAULT_EXTENSIONS,
-        IS_VALIDATE_JSON
-      );
+      const res = parseDir(filePath);
 
       expect(res).to.deep.equal({
         dir: resolve(source, "valid-json-entry-lib", "test"),
         subDir: "",
         isSrc: false,
+        srcName: "",
         isJsonValid: false,
         includeValidEntry: true,
         ext: "ts",
@@ -237,17 +192,13 @@ describe("Directory Parser", () => {
       const expectedPath = resolve(source, "valid-json-entries-flat");
       const filePath = resolve(source, "valid-json-entries-flat", "a");
 
-      const res = parseDir(
-        filePath,
-        DEFAULT_SRC_NAME,
-        DEFAULT_EXTENSIONS,
-        IS_VALIDATE_JSON
-      );
+      const res = parseDir(filePath);
 
       expect(res).to.deep.equal({
         dir: expectedPath,
         subDir: "",
         isSrc: false,
+        srcName: "",
         isJsonValid: true,
         includeValidEntry: true,
         ext: "js",
@@ -259,17 +210,13 @@ describe("Directory Parser", () => {
       const expectedPath = resolve(source, "valid-json-entries-flat");
       const filePath = resolve(source, "valid-json-entries-flat", "a.js");
 
-      const res = parseDir(
-        filePath,
-        DEFAULT_SRC_NAME,
-        DEFAULT_EXTENSIONS,
-        IS_VALIDATE_JSON
-      );
+      const res = parseDir(filePath);
 
       expect(res).to.deep.equal({
         dir: expectedPath,
         subDir: "",
         isSrc: false,
+        srcName: "",
         isJsonValid: true,
         includeValidEntry: true,
         ext: "js",
