@@ -7,7 +7,7 @@ const source = resolve(__dirname, "fixtures");
 
 describe("Directory Parser", () => {
   describe("Directory includes root only", () => {
-    it.only("with default", () => {
+    it("with default", () => {
       const res = parseDir({});
 
       expect(res).to.deep.equal({

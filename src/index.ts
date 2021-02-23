@@ -233,6 +233,7 @@ function parseDir({
     name = "";
 
     ({ isFound: isSrc, match: subDir } = strMatchInLoop(subFoldersNames, base));
+
     srcName = subDir;
 
     if (subDir.length === 0) {
