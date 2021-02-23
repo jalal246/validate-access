@@ -20,14 +20,14 @@ interface ParseDirOutput {
 }
 
 interface ParseDirInput {
-  dir: string;
-  subFoldersNames: string[];
-  extensions: string[];
-  isValidateJson: boolean;
+  dir?: string;
+  subFoldersNames?: string[];
+  extensions?: string[];
+  isValidateJson?: boolean;
 }
 
 interface ValidateAccessInput extends ParseDirInput {
-  entry: string;
+  entry?: string | string[];
 }
 
 interface ParseEntry {
@@ -93,18 +93,39 @@ function validate(dir: string, fName?: string): boolean {
   return fs.existsSync(fName ? path.resolve(dir, fName) : dir);
 }
 
+function isDirHaSub(dir: string, subDir: string) {
+  return (
+    subDir.length > 0 &&
+    dir.length > 0 &&
+    (dir === subDir || path.relative(dir, subDir).length > 0)
+  );
+}
+
 function getWorkingDir(
   baseDir: string,
   subDir: string,
-  entryDir: string
+  entryDir: string,
+  srcName: string
 ): string {
-  if (subDir) {
-    return entryDir
-      ? path.resolve(baseDir, subDir, entryDir)
-      : path.resolve(baseDir, subDir);
+  let upgradeBaseDir = baseDir;
+
+  const isSubDirHasSrc = isDirHaSub(subDir, srcName);
+  const isEntryDirHasSrc = isDirHaSub(entryDir, srcName);
+  const mustInsetSrc = !isSubDirHasSrc && !isEntryDirHasSrc;
+
+  if (mustInsetSrc) {
+    upgradeBaseDir = path.resolve(baseDir, srcName);
   }
 
-  return entryDir ? path.resolve(baseDir, entryDir) : baseDir;
+  if (subDir.length > 0) {
+    return entryDir.length > 0
+      ? path.resolve(upgradeBaseDir, subDir, entryDir)
+      : path.resolve(upgradeBaseDir, subDir);
+  }
+
+  return entryDir.length > 0
+    ? path.resolve(upgradeBaseDir, entryDir)
+    : upgradeBaseDir;
 }
 
 function parsePathWithExt(
@@ -158,7 +179,7 @@ function parseEntry(entry: string): ParseEntry {
 }
 
 function parseDir({
-  dir = ".",
+  dir,
   subFoldersNames = DEFAULT_DIR_FOLDERS,
   extensions = DEFAULT_EXTENSIONS,
   isValidateJson = true,
@@ -252,7 +273,7 @@ function parseDir({
 }
 
 function validateAccess({
-  dir: inputDir = ".",
+  dir: inputDir,
   entry: entries = "index",
   subFoldersNames = DEFAULT_DIR_FOLDERS,
   extensions = DEFAULT_EXTENSIONS,
@@ -264,7 +285,6 @@ function validateAccess({
     extensions,
     isValidateJson,
   });
-  console.log("file: index.ts ~ line 267 ~ parsedDir", parsedDir);
 
   const essentialResult = {
     dir: parsedDir.dir,
@@ -278,7 +298,7 @@ function validateAccess({
   if (parsedDir.includeValidEntry) {
     return {
       ...essentialResult,
-      entry: entries,
+      entry: Array.isArray(entries) ? entries[0] : entries,
       entryDir: "",
       isEntryValid: parsedDir.includeValidEntry,
       ext: parsedDir.ext,
@@ -288,7 +308,7 @@ function validateAccess({
 
   const parsedEntries: Entry[] = [];
 
-  if (Array.isArray(entries) && entries.length > 0) {
+  if (Array.isArray(entries)) {
     // parsing entries
     entries.forEach((entry) => {
       parsedEntries.push({ ...parseEntry(entry), isEntryValid: false });
@@ -306,7 +326,8 @@ function validateAccess({
     const workingDir = getWorkingDir(
       parsedDir.dir,
       parsedDir.subDir,
-      parsedEntry.entryDir
+      parsedEntry.entryDir,
+      parsedDir.srcName
     );
 
     if (parsedEntry.ext.length === 0) {

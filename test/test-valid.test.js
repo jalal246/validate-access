@@ -10,86 +10,134 @@ const { validateAccess } = require("../lib");
 const source = resolve(__dirname, "fixtures");
 
 describe("Validate Access", () => {
-  describe("No directory but only entry", () => {
-    const EXPECTED_DIR = ".";
-    const IS_JSON_VALID = true;
-    const IS_SRC = true;
+  describe.only("No directory but only entry", () => {
+    let EXPECTED_RESULT = {
+      dir: ".",
+      subDir: "",
+      entry: "index",
+      entryDir: "",
+      isJsonValid: true,
+      isSrc: true,
+      srcName: "src",
+      isEntryValid: true,
+      name: "index",
+      ext: "ts",
+    };
 
-    it("Default args", () => {
+    it.only("Default args", () => {
       const res = validateAccess({});
 
-      expect(res).to.deep.equal({
-        dir: EXPECTED_DIR,
-        subDir: "",
-        entry: "",
-        entryDir: "",
-        isJsonValid: IS_JSON_VALID,
-        isSrc: true,
-        srcName: "",
-        isEntryValid: true,
-        name: "index",
-        ext: "ts",
-      });
+      expect(res).to.deep.equal(EXPECTED_RESULT);
     });
 
-    it("Specify one input", () => {
+    it.only("One entry without extension", () => {
       const res = validateAccess({ entry: "index" });
 
-      expect(res).to.deep.equal({
-        dir: EXPECTED_DIR,
-        isJsonValid: IS_JSON_VALID,
-        isSrc: IS_SRC,
-        isEntryValid: true,
-        entry: "index",
-        name: "index",
-        ext: "ts",
-      });
+      expect(res).to.deep.equal(EXPECTED_RESULT);
     });
 
-    it("Specify one input in an array", () => {
+    it.only("One entry without extension inside an array", () => {
       const res = validateAccess({ entry: ["index"] });
 
-      expect(res).to.deep.equal({
-        dir: EXPECTED_DIR,
-        isJsonValid: IS_JSON_VALID,
-        isSrc: IS_SRC,
-        entry: "index",
-        name: "index",
-        isEntryValid: true,
-        ext: "ts",
-      });
+      expect(res).to.deep.equal(EXPECTED_RESULT);
     });
 
-    it("Specify multi inputs", () => {
+    it.only("Entry with dir without extension", () => {
+      const entry = "src/index";
+      const res = validateAccess({ entry });
+
+      EXPECTED_RESULT = {
+        dir: ".",
+        subDir: "",
+        entry,
+        entryDir: "src",
+        isJsonValid: true,
+        isSrc: true,
+        srcName: "src",
+        isEntryValid: true,
+        name: "index",
+        ext: "ts",
+      };
+
+      expect(res).to.deep.equal(EXPECTED_RESULT);
+    });
+
+    it.only("Entry with dir and extension", () => {
+      const entry = "src/index.ts";
+      const res = validateAccess({ entry });
+
+      EXPECTED_RESULT = {
+        dir: ".",
+        subDir: "",
+        entry,
+        entryDir: "src",
+        isJsonValid: true,
+        isSrc: true,
+        srcName: "src",
+        isEntryValid: true,
+        name: "index",
+        ext: "ts",
+      };
+
+      expect(res).to.deep.equal(EXPECTED_RESULT);
+    });
+
+    it.only("Entry with dir and wrong extension", () => {
+      const entry = "src/index.js";
+      const res = validateAccess({ entry });
+
+      EXPECTED_RESULT = {
+        dir: ".",
+        subDir: "",
+        entry,
+        entryDir: "src",
+        isJsonValid: true,
+        isSrc: true,
+        srcName: "src",
+        isEntryValid: false,
+        name: "index",
+        ext: "js",
+      };
+
+      expect(res).to.deep.equal(EXPECTED_RESULT);
+    });
+
+    it.only("Multiple entries", () => {
       const res = validateAccess({
         entry: ["a.js", "index", "src/index", "src/index.js"],
       });
 
       expect(res).to.deep.equal({
-        dir: EXPECTED_DIR,
-        isJsonValid: IS_JSON_VALID,
-        isSrc: IS_SRC,
+        dir: ".",
+        subDir: "",
+        isJsonValid: true,
+        isSrc: true,
+        srcName: "src",
         entries: [
           {
             entry: "a.js",
+            entryDir: "",
             name: "a",
             isEntryValid: false,
             ext: "js",
           },
           {
             entry: "index",
+            entryDir: "",
             name: "index",
             isEntryValid: true,
             ext: "ts",
           },
           {
             entry: "src/index",
+            entryDir: "src",
             name: "index",
             isEntryValid: true,
             ext: "ts",
           },
           {
             entry: "src/index.js",
+            entryDir: "src",
             name: "index",
             isEntryValid: false,
             ext: "js",
@@ -99,24 +147,27 @@ describe("Validate Access", () => {
     });
   });
 
-  describe("Only valid json", () => {
-    it("Dealing with directory only as input", () => {
+  describe.only("Only valid json on the folder", () => {
+    it.only("Only dir", () => {
       const filePath = resolve(source, "valid-json");
 
       const res = validateAccess({ dir: filePath });
 
       expect(res).to.deep.equal({
         dir: filePath,
+        subDir: "",
         isJsonValid: true,
         isSrc: false,
-        entry: "",
+        srcName: "",
+        entry: "index",
+        entryDir: "",
         name: "index",
         isEntryValid: false,
         ext: "",
       });
     });
 
-    it("Dealing with directory and entry as input", () => {
+    it.only("Directory and non-existence entry", () => {
       const filePath = resolve(source, "valid-json");
       const entry = "b.ts";
 
@@ -124,16 +175,19 @@ describe("Validate Access", () => {
 
       expect(res).to.deep.equal({
         dir: filePath,
+        subDir: "",
         isJsonValid: true,
         isSrc: false,
+        srcName: "",
         entry,
+        entryDir: "",
         name: "b",
         isEntryValid: false,
         ext: "ts",
       });
     });
 
-    it("Dealing with directory and entry as input contains src", () => {
+    it.only("Directory and non-existence entry and src file name", () => {
       const filePath = resolve(source, "valid-json");
       const entry = "./src/b.ts";
 
@@ -141,9 +195,12 @@ describe("Validate Access", () => {
 
       expect(res).to.deep.equal({
         dir: filePath,
+        subDir: "",
         isJsonValid: true,
         isSrc: false,
+        srcName: "",
         entry,
+        entryDir: "./src",
         name: "b",
         isEntryValid: false,
         ext: "ts",
@@ -151,8 +208,8 @@ describe("Validate Access", () => {
     });
   });
 
-  describe("All valid in flat structure ", () => {
-    it("Dealing with directory only as input", () => {
+  describe.only("Testing with flat structure", () => {
+    it.only("Directory only", () => {
       const filePath = resolve(source, "valid-json-entries-flat");
 
       const res = validateAccess({
@@ -161,16 +218,19 @@ describe("Validate Access", () => {
 
       expect(res).to.deep.equal({
         dir: filePath,
+        subDir: "",
         isJsonValid: true,
         isSrc: false,
-        entry: "",
+        srcName: "",
+        entry: "index",
+        entryDir: "",
         name: "index",
         isEntryValid: true,
         ext: "js",
       });
     });
 
-    it("Dealing with a valid targeted entry no extension involved", () => {
+    it.only("Directory with an entry without an extension", () => {
       const filePath = resolve(source, "valid-json-entries-flat");
       const entry = "b";
 
@@ -181,16 +241,19 @@ describe("Validate Access", () => {
 
       expect(res).to.deep.equal({
         dir: filePath,
+        subDir: "",
         isJsonValid: true,
         isSrc: false,
-        entry,
+        srcName: "",
+        entry: "b",
+        entryDir: "",
         name: "b",
         isEntryValid: true,
         ext: "ts",
       });
     });
 
-    it("Dealing with a valid targeted entry with an extension involved", () => {
+    it.only("Directory with an entry and  extension", () => {
       const filePath = resolve(source, "valid-json-entries-flat");
       const entry = "b.ts";
 
@@ -201,17 +264,83 @@ describe("Validate Access", () => {
 
       expect(res).to.deep.equal({
         dir: filePath,
+        subDir: "",
         isJsonValid: true,
         isSrc: false,
-        entry,
+        srcName: "",
+        entry: "b.ts",
+        entryDir: "",
         name: "b",
         isEntryValid: true,
         ext: "ts",
       });
     });
+
+    it.only("Directory with an entry and  wrong extension", () => {
+      const filePath = resolve(source, "valid-json-entries-flat");
+      const entry = "b.js";
+
+      const res = validateAccess({
+        dir: filePath,
+        entry,
+      });
+
+      expect(res).to.deep.equal({
+        dir: filePath,
+        subDir: "",
+        isJsonValid: true,
+        isSrc: false,
+        srcName: "",
+        entry: "b.js",
+        entryDir: "",
+        name: "b",
+        isEntryValid: false,
+        ext: "js",
+      });
+    });
+
+    it.only("Multiple entries", () => {
+      const filePath = resolve(source, "valid-json-entries-flat");
+
+      const res = validateAccess({
+        dir: filePath,
+        entry: ["a.js", "b.ts", "index"],
+      });
+
+      expect(res).to.deep.equal({
+        dir: filePath,
+        subDir: "",
+        isJsonValid: true,
+        isSrc: false,
+        srcName: "",
+        entries: [
+          {
+            entry: "a.js",
+            entryDir: "",
+            isEntryValid: true,
+            ext: "js",
+            name: "a",
+          },
+          {
+            entry: "b.ts",
+            entryDir: "",
+            isEntryValid: true,
+            ext: "ts",
+            name: "b",
+          },
+          {
+            entry: "index",
+            entryDir: "",
+            isEntryValid: true,
+            ext: "js",
+            name: "index",
+          },
+        ],
+      });
+    });
   });
 
-  describe("All valid project with src structure", () => {
+  describe.only("All valid project with src structure", () => {
     it("Dealing with directory only as input", () => {
       const filePath = resolve(source, "valid-json-entries-src");
 
