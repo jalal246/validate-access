@@ -1,8 +1,20 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable import/prefer-default-export */
 
-const fs = require("fs");
-const path = require("path");
+/// <reference types="node" />
+
+import fs from "fs";
+import path from "path";
+
+// [
+//   ".js",
+//   ".jsx",
+//   ".es6",
+//   ".es",
+//   ".mjs",
+//   ".cjs",
+// ]
+// const EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".es6", ".es", ".mjs"];
 
 const DEFAULT_EXTENSIONS: string[] = ["js", "ts"];
 const DEFAULT_DIR_FOLDERS: string[] = ["src", "lib", "dist"];
@@ -54,6 +66,55 @@ interface ValidationMulti {
   isJsonValid: boolean | null;
   isSrc: boolean;
   entries: Entry[];
+}
+
+function extractSrcFolderFromDir(
+  pureDir: string,
+  targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS
+) {
+  let dir = pureDir;
+  let subDir = "";
+  const fName = "";
+  let isSrc = false;
+  let srcName = "";
+
+  const foldersName = Array.isArray(targetedFolders)
+    ? targetedFolders
+    : [targetedFolders];
+
+  for (let i = 0; i < foldersName.length; i += 1) {
+    srcName = foldersName[i];
+
+    // \\lib$|^lib\\|\\lib\\
+    const reg = new RegExp(
+      `\\${path.sep}${srcName}$|^${srcName}\\${path.sep}|\\${path.sep}${srcName}\\${path.sep}`
+    );
+
+    isSrc = reg.test(pureDir);
+
+    if (isSrc) {
+      // D:\projects\validate-access\test\fixtures\valid-json-entry-lib\test\b.ts
+
+      //  [
+      //   'D:\\projects\\validate-access',
+      //   'fixtures\\valid-json-entry-lib',
+      //   'b.ts'
+      // ]
+
+      [dir, subDir] = pureDir.split(reg);
+
+      break;
+    } else {
+      srcName = "";
+    }
+  }
+
+  return {
+    dir,
+    subDir,
+    isSrc,
+    srcName,
+  };
 }
 
 function validatorMatchInLoop(
@@ -149,12 +210,14 @@ function parsePathWithExt(
 
   const includeValidEntry = validate(givenDir);
 
+  const newParse = path.parse(baseDir);
+
   // second round looking for sub dir
   ({ dir: baseDir, name: subDir } = path.parse(baseDir));
 
   const { isFound: isSrc, match: srcName } = strMatchInLoop(
     subFoldersNames,
-    subDir
+    newParse.name
   );
 
   if (!isSrc) {
@@ -194,10 +257,10 @@ function parseDir({
   let isJsonValid: boolean | null = false;
 
   if (!dir || dir.length === 0) {
-    ({ isFound: isSrc, match: srcName } = validatorMatchInLoop(
+    const validateSrcResult = validatorMatchInLoop(
       subFoldersNames,
       validate.bind(".")
-    ));
+    );
 
     isJsonValid = isValidateJson ? validate(baseDir, PKG_JSON) : null;
 
@@ -205,8 +268,8 @@ function parseDir({
       dir: baseDir,
       subDir,
       isJsonValid,
-      isSrc,
-      srcName,
+      isSrc: validateSrcResult.isFound,
+      srcName: validateSrcResult.match,
       includeValidEntry: false,
       ext,
       name,
@@ -217,9 +280,22 @@ function parseDir({
 
   let includeValidEntry = false;
 
+  dir = path.normalize(dir);
+
+  const inputDirParsed = path.parse(dir);
+
   ({ dir: baseDir, ext, name, base } = path.parse(dir));
 
-  if (ext.length > 0) {
+  if (inputDirParsed.ext.length > 0) {
+    // eslint-disable-next-line prefer-destructuring
+    inputDirParsed.ext = inputDirParsed.ext.split(".")[1];
+    includeValidEntry = validate(dir);
+
+    console.log(extractSrcFolderFromDir(dir));
+    // Second round looking for sub dir
+
+    // **
+
     ({
       baseDir,
       ext,
@@ -367,4 +443,4 @@ function validateAccess({
   };
 }
 
-export { validateAccess, parseEntry, parseDir };
+export { validateAccess, extractSrcFolderFromDir, parseEntry, parseDir };

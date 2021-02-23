@@ -341,7 +341,7 @@ describe("Validate Access", () => {
   });
 
   describe("Testing with src folders structure", () => {
-    it("Directory only", () => {
+    it.skip("Directory only", () => {
       const filePath = resolve(source, "valid-json-entry-lib");
 
       const res = validateAccess({
