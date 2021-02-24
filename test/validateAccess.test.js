@@ -158,26 +158,26 @@ describe("Validate Access", () => {
       });
     });
 
-    // it.only("Directory with files inside src folder", () => {
-    //   const filePath = resolve(source, "valid-json-entry-lib");
+    it.only("Directory with files inside src folder", () => {
+      const filePath = resolve(source, "valid-json-entry-lib");
 
-    //   const res = validateAccess({
-    //     dir: filePath,
-    //   });
+      const res = validateAccess({
+        dir: filePath,
+      });
 
-    //   expect(res).to.deep.equal({
-    //     dir: filePath,
-    //     subDir: "",
-    //     isJsonValid: true,
-    //     isSrc: true,
-    //     srcName: "src",
-    //     entry: "index",
-    //     entryDir: "",
-    //     name: "index",
-    //     isEntryValid: true,
-    //     ext: "js",
-    //   });
-    // });
+      expect(res).to.deep.equal({
+        dir: filePath,
+        subDir: "",
+        isJsonValid: true,
+        isSrc: true,
+        srcName: "src",
+        entry: "index",
+        entryDir: "",
+        name: "index",
+        isEntryValid: true,
+        ext: "js",
+      });
+    });
   });
 
   describe.only("Directory, Entry, no file attached", () => {

@@ -188,6 +188,63 @@ function parseDirIncludesFile(
   };
 }
 
+interface resolveConflictedDirInput {
+  dir: string;
+  subDir: string;
+  isSrc: boolean;
+  srcName: string;
+}
+
+function resolveConflictedDir(
+  mainDir: resolveConflictedDirInput,
+  dirBranch: resolveConflictedDirInput,
+  targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS
+) {
+  const dirObj = mainDir;
+  const entryObj = dirBranch;
+
+  if (entryObj.isSrc) {
+    if (!dirObj.isSrc) {
+      dirObj.isSrc = true;
+      dirObj.srcName = entryObj.srcName;
+
+      if (dirObj.subDir.length === 0) {
+        dirObj.subDir = entryObj.subDir;
+      } else {
+        dirObj.subDir += path.sep + entryObj.subDir;
+      }
+      entryObj.subDir = "";
+
+      return { dir: dirObj, entry: entryObj };
+    }
+
+    if (entryObj.srcName === dirObj.srcName) {
+      entryObj.isSrc = false;
+      entryObj.srcName = "";
+
+      return { dir: dirObj, entry: entryObj };
+    }
+
+    dirObj.srcName += path.sep + entryObj.srcName;
+    dirObj.subDir += path.sep + entryObj.subDir;
+
+    entryObj.isSrc = false;
+    entryObj.srcName = "";
+    entryObj.subDir = "";
+
+    return { dir: dirObj, entry: entryObj };
+  }
+
+  if (!dirObj.isSrc) {
+    ({ isSrc: dirObj.isSrc, srcName: dirObj.srcName } = lookupSrcFolderFromDir(
+      dirObj.dir,
+      targetedFolders
+    ));
+  }
+
+  return { dir: dirObj, entry: entryObj };
+}
+
 function parseDir({
   dir: pureDir,
   targetedFolders = DEFAULT_DIR_FOLDERS,
@@ -300,41 +357,28 @@ function validateAccess({
     };
   }
 
-  const { name, ext, ...resolvedDirNoNameExt } = restDirInfo;
+  const { name, ext, isJsonValid, ...resolvedDirWithSrc } = restDirInfo;
 
   // parsing entries
   const results = finalEntries.map((entry) => {
     const parsedEntry = path.parse(entry);
 
-    const resolvedEntryFromSrc = extractSrcFolderFromDir(
-      entry,
-      targetedFolders
-    );
+    let resolvedEntryFromSrc = extractSrcFolderFromDir(entry, targetedFolders);
 
-    // need to be tested
-    if (resolvedEntryFromSrc.isSrc) {
-      if (!resolvedDirNoNameExt.isSrc) {
-        resolvedDirNoNameExt.isSrc = true;
-        resolvedDirNoNameExt.srcName = resolvedEntryFromSrc.srcName;
-        resolvedDirNoNameExt.subDir += path.sep + resolvedEntryFromSrc.subDir;
-      } else if (
-        resolvedEntryFromSrc.srcName === resolvedDirNoNameExt.srcName
-      ) {
-        resolvedEntryFromSrc.isSrc = false;
-        resolvedEntryFromSrc.srcName = "";
-      } else {
-        resolvedEntryFromSrc.isSrc = false;
-        resolvedEntryFromSrc.srcName = "";
-        resolvedDirNoNameExt.srcName += path.sep + resolvedEntryFromSrc.srcName;
-        resolvedDirNoNameExt.subDir += path.sep + resolvedEntryFromSrc.subDir;
-      }
-    }
+    ({
+      dir: resolvedEntryFromSrc,
+      entry: resolvedEntryFromSrc,
+    } = resolveConflictedDir(
+      resolvedDirWithSrc,
+      resolvedEntryFromSrc,
+      targetedFolders
+    ));
 
     const workingDir = getWorkingDir(
-      resolvedDirNoNameExt.dir,
-      resolvedDirNoNameExt.subDir,
+      resolvedDirWithSrc.dir,
+      resolvedDirWithSrc.subDir,
       resolvedEntryFromSrc.subDir,
-      resolvedDirNoNameExt.srcName
+      resolvedDirWithSrc.srcName
     );
 
     let isEntryValid = false;
@@ -376,7 +420,8 @@ function validateAccess({
   });
 
   return {
-    ...resolvedDirNoNameExt,
+    isJsonValid,
+    ...resolvedDirWithSrc,
     ...(results.length === 1 ? results[0] : { entries: results }),
   };
 }
