@@ -6,7 +6,7 @@ const { extractSrcFolderFromDir } = require("../lib");
 
 const source = resolve(__dirname, "fixtures");
 
-describe.only("extractSrcFolderFromDir", () => {
+describe("extractSrcFolderFromDir", () => {
   const noResult = (dir) => ({
     dir,
     subDir: "",
