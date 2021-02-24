@@ -200,6 +200,23 @@ function parseDir({
   };
 }
 
+// function updateResolvedDirInfo(
+//   resolvedEntryFromSrc: ReturnType<typeof extractSrcFolderFromDir>,
+//   resolvedDirInfo: ReturnType<typeof extractSrcFolderFromDir>
+// ) {
+//   const newResolvedDirInfo = resolvedDirInfo;
+
+//   if (resolvedEntryFromSrc.isSrc) {
+//     if (!resolvedDirInfo.isSrc) {
+//       newResolvedDirInfo.isSrc = true;
+//       newResolvedDirInfo.srcName = resolvedEntryFromSrc.srcName;
+//       newResolvedDirInfo.subDir += resolvedEntryFromSrc.subDir;
+//     }
+//   }
+
+//   return newResolvedDirInfo;
+// }
+
 function isDirHaSub(dir: string, subDir: string) {
   return (
     subDir.length > 0 &&
@@ -251,15 +268,19 @@ function validateAccess({
 
   const finalEntries = normalizeInputToArray(entries);
 
+  const { includeValidEntry, ...restDirInfo } = parsedDir;
+
   // Discovered file inside dir?
-  if (parsedDir.includeValidEntry) {
+  if (includeValidEntry) {
     return {
-      ...parsedDir,
       entry: finalEntries[0],
       entryDir: "",
-      isEntryValid: parsedDir.includeValidEntry,
+      isEntryValid: includeValidEntry,
+      ...restDirInfo,
     };
   }
+
+  const { name, ext, ...resolvedDirNoNameExt } = restDirInfo;
 
   // parsing entries
   const results = finalEntries.map((entry) => {
@@ -270,11 +291,30 @@ function validateAccess({
       targetedFolders
     );
 
+    // need to be tested
+    if (resolvedEntryFromSrc.isSrc) {
+      if (!resolvedDirNoNameExt.isSrc) {
+        resolvedDirNoNameExt.isSrc = true;
+        resolvedDirNoNameExt.srcName = resolvedEntryFromSrc.srcName;
+        resolvedDirNoNameExt.subDir += path.sep + resolvedEntryFromSrc.subDir;
+      } else if (
+        resolvedEntryFromSrc.srcName === resolvedDirNoNameExt.srcName
+      ) {
+        resolvedEntryFromSrc.isSrc = false;
+        resolvedEntryFromSrc.srcName = "";
+      } else {
+        resolvedEntryFromSrc.isSrc = false;
+        resolvedEntryFromSrc.srcName = "";
+        resolvedDirNoNameExt.srcName += path.sep + resolvedEntryFromSrc.srcName;
+        resolvedDirNoNameExt.subDir += path.sep + resolvedEntryFromSrc.subDir;
+      }
+    }
+
     const workingDir = getWorkingDir(
-      parsedDir.dir,
-      parsedDir.subDir,
+      resolvedDirNoNameExt.dir,
+      resolvedDirNoNameExt.subDir,
       resolvedEntryFromSrc.subDir,
-      resolvedEntryFromSrc.srcName
+      resolvedDirNoNameExt.srcName
     );
 
     console.log("file: index.ts ~ line 283 ~ workingDir", workingDir);
@@ -318,7 +358,7 @@ function validateAccess({
   });
 
   return {
-    ...parsedDir,
+    ...resolvedDirNoNameExt,
     ...(results.length === 1 ? results[0] : { entries: results }),
   };
 }
