@@ -158,85 +158,6 @@ function parseDirIncludesFile(
   };
 }
 
-// function validatorMatchInLoop(
-//   arr: string[],
-//   // eslint-disable-next-line no-unused-vars
-//   validator: (arg: string) => boolean
-// ) {
-//   let isFound = false;
-//   let str = "";
-
-//   for (let i = 0; i < arr.length; i += 1) {
-//     str = arr[i];
-
-//     if (validator(str)) {
-//       isFound = true;
-//       break;
-//     }
-//   }
-
-//   return { isFound, match: str };
-// }
-
-// function strMatchInLoop(arr: string[], str: string) {
-//   let isFound = false;
-
-//   for (let i = 0; i < arr.length; i += 1) {
-//     if (str === arr[i]) {
-//       isFound = true;
-//       break;
-//     }
-//   }
-
-//   return { isFound, match: isFound ? str : "" };
-// }
-
-function isDirHaSub(dir: string, subDir: string) {
-  return (
-    subDir.length > 0 &&
-    dir.length > 0 &&
-    (dir === subDir || path.relative(dir, subDir).length > 0)
-  );
-}
-
-function getWorkingDir(
-  baseDir: string,
-  subDir: string,
-  entryDir: string,
-  srcName: string
-): string {
-  let upgradeBaseDir = baseDir;
-
-  const isSubDirHasSrc = isDirHaSub(subDir, srcName);
-  const isEntryDirHasSrc = isDirHaSub(entryDir, srcName);
-  const mustInsetSrc = !isSubDirHasSrc && !isEntryDirHasSrc;
-
-  if (mustInsetSrc) {
-    upgradeBaseDir = path.resolve(baseDir, srcName);
-  }
-
-  if (subDir.length > 0) {
-    return entryDir.length > 0
-      ? path.resolve(upgradeBaseDir, subDir, entryDir)
-      : path.resolve(upgradeBaseDir, subDir);
-  }
-
-  return entryDir.length > 0
-    ? path.resolve(upgradeBaseDir, entryDir)
-    : upgradeBaseDir;
-}
-
-function parseEntry(entry: string): ParseEntry {
-  const { ext, name, dir: entryDir } = path.parse(entry);
-
-  return {
-    entry,
-    entryDir,
-    ext: ext.length === 0 ? ext : ext.split(".")[1],
-    name,
-  };
-}
-
 function parseDir({
   dir: pureDir,
   targetedFolders = DEFAULT_DIR_FOLDERS,
@@ -281,6 +202,52 @@ function parseDir({
       : null,
     ...resolvedDirFromSrc,
     ...parsedDirWithFile,
+  };
+}
+
+function isDirHaSub(dir: string, subDir: string) {
+  return (
+    subDir.length > 0 &&
+    dir.length > 0 &&
+    (dir === subDir || path.relative(dir, subDir).length > 0)
+  );
+}
+
+function getWorkingDir(
+  baseDir: string,
+  subDir: string,
+  entryDir: string,
+  srcName: string
+): string {
+  let upgradeBaseDir = baseDir;
+
+  const isSubDirHasSrc = isDirHaSub(subDir, srcName);
+  const isEntryDirHasSrc = isDirHaSub(entryDir, srcName);
+  const mustInsetSrc = !isSubDirHasSrc && !isEntryDirHasSrc;
+
+  if (mustInsetSrc) {
+    upgradeBaseDir = path.resolve(baseDir, srcName);
+  }
+
+  if (subDir.length > 0) {
+    return entryDir.length > 0
+      ? path.resolve(upgradeBaseDir, subDir, entryDir)
+      : path.resolve(upgradeBaseDir, subDir);
+  }
+
+  return entryDir.length > 0
+    ? path.resolve(upgradeBaseDir, entryDir)
+    : upgradeBaseDir;
+}
+
+function parseEntry(entry: string): ParseEntry {
+  const { ext, name, dir: entryDir } = path.parse(entry);
+
+  return {
+    entry,
+    entryDir,
+    ext: ext.length === 0 ? ext : ext.split(".")[1],
+    name,
   };
 }
 
