@@ -69,6 +69,10 @@ function normalizeInputToArray(input: string | string[]) {
   return Array.isArray(input) ? input : [input];
 }
 
+function validate(dir: string, fName?: string): boolean {
+  return fs.existsSync(fName ? path.resolve(dir, fName) : dir);
+}
+
 function extractSrcFolderFromDir(
   pureDir: string,
   targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS
@@ -107,16 +111,52 @@ function extractSrcFolderFromDir(
   };
 }
 
-function validate(dir: string, fName?: string): boolean {
-  return fs.existsSync(fName ? path.resolve(dir, fName) : dir);
+function lookupSrcFolderFromDir(
+  dir: string,
+  targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS
+) {
+  const finalTargetedFolders = normalizeInputToArray(targetedFolders);
+
+  let isSrc = false;
+  let srcName = "";
+
+  for (let i = 0; i < finalTargetedFolders.length; i += 1) {
+    isSrc = validate(dir, finalTargetedFolders[i]);
+
+    if (isSrc) {
+      srcName = finalTargetedFolders[i];
+      break;
+    }
+  }
+
+  return { isSrc, srcName };
+}
+
+function lookupExtFromDir(
+  dir: string,
+  extensions: string[] | string = DEFAULT_EXTENSIONS
+) {
+  const finalExts = normalizeInputToArray(extensions);
+
+  let isEntryValid = false;
+  let ext = "";
+
+  for (let i = 0; i < finalExts.length; i += 1) {
+    isEntryValid = validate(`${dir}.${finalExts[i]}`);
+
+    if (isEntryValid) {
+      ext = finalExts[i];
+      break;
+    }
+  }
+
+  return { isEntryValid, ext };
 }
 
 function parseDirIncludesFile(
   dir: string,
   extensions: string | string[] = DEFAULT_EXTENSIONS
 ) {
-  const finalExtensions = normalizeInputToArray(extensions);
-
   const parsedSubDir = path.parse(dir);
 
   let includeValidEntry = false;
@@ -124,15 +164,10 @@ function parseDirIncludesFile(
   if (parsedSubDir.ext.length === 0) {
     // maybe :
     // to/src/b or  to/b or to
-    for (let j = 0; j < finalExtensions.length; j += 1) {
-      includeValidEntry = validate(`${dir}.${finalExtensions[j]}`);
-
-      if (includeValidEntry) {
-        parsedSubDir.ext = finalExtensions[j];
-
-        break;
-      }
-    }
+    ({
+      isEntryValid: includeValidEntry,
+      ext: parsedSubDir.ext,
+    } = lookupExtFromDir(dir, extensions));
   } else {
     if (parsedSubDir.ext.includes(".")) {
       [, parsedSubDir.ext] = parsedSubDir.ext.split(".");
@@ -162,18 +197,20 @@ function parseDir({
   let dir = pureDir;
 
   if (!dir || dir.length === 0) {
-    dir = path.resolve(".", "src");
+    dir = path.resolve(".");
 
-    const resolvedDirFromSrc = extractSrcFolderFromDir(dir, targetedFolders);
+    const lookupSrcResult = lookupSrcFolderFromDir(dir, targetedFolders);
 
     return {
+      dir,
+      subDir: "",
       isJsonValid: isValidateJson
         ? validate(path.resolve("."), PKG_JSON)
         : null,
       includeValidEntry: false,
       ext: "",
       name: "",
-      ...resolvedDirFromSrc,
+      ...lookupSrcResult,
     };
   }
 
@@ -199,23 +236,6 @@ function parseDir({
     ...parsedDirWithFile,
   };
 }
-
-// function updateResolvedDirInfo(
-//   resolvedEntryFromSrc: ReturnType<typeof extractSrcFolderFromDir>,
-//   resolvedDirInfo: ReturnType<typeof extractSrcFolderFromDir>
-// ) {
-//   const newResolvedDirInfo = resolvedDirInfo;
-
-//   if (resolvedEntryFromSrc.isSrc) {
-//     if (!resolvedDirInfo.isSrc) {
-//       newResolvedDirInfo.isSrc = true;
-//       newResolvedDirInfo.srcName = resolvedEntryFromSrc.srcName;
-//       newResolvedDirInfo.subDir += resolvedEntryFromSrc.subDir;
-//     }
-//   }
-
-//   return newResolvedDirInfo;
-// }
 
 function isDirHaSub(dir: string, subDir: string) {
   return (
@@ -316,8 +336,6 @@ function validateAccess({
       resolvedEntryFromSrc.subDir,
       resolvedDirNoNameExt.srcName
     );
-
-    console.log("file: index.ts ~ line 283 ~ workingDir", workingDir);
 
     let isEntryValid = false;
 
