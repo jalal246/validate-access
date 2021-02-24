@@ -30,8 +30,8 @@ interface ParseDirOutput {
 
 interface ParseDirInput {
   dir?: string;
-  targetedFolders?: string[];
-  extensions?: string[];
+  targetedFolders?: string | string[];
+  extensions?: string | string[];
   isValidateJson?: boolean;
 }
 
@@ -65,6 +65,10 @@ interface ValidationMulti {
   entries: Entry[];
 }
 
+function normalizeInputToArray(input: string | string[]) {
+  return Array.isArray(input) ? input : [input];
+}
+
 function extractSrcFolderFromDir(
   pureDir: string,
   targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS
@@ -74,9 +78,7 @@ function extractSrcFolderFromDir(
   let isSrc = false;
   let srcName = "";
 
-  const foldersName = Array.isArray(targetedFolders)
-    ? targetedFolders
-    : [targetedFolders];
+  const foldersName = normalizeInputToArray(targetedFolders);
 
   for (let i = 0; i < foldersName.length; i += 1) {
     srcName = foldersName[i];
@@ -107,10 +109,6 @@ function extractSrcFolderFromDir(
 
 function validate(dir: string, fName?: string): boolean {
   return fs.existsSync(fName ? path.resolve(dir, fName) : dir);
-}
-
-function normalizeInputToArray(input: string | string[]) {
-  return Array.isArray(input) ? input : [input];
 }
 
 function parseDirIncludesFile(
@@ -237,108 +235,91 @@ function getWorkingDir(
     : upgradeBaseDir;
 }
 
-function parseEntry(entry: string): ParseEntry {
-  const { ext, name, dir: entryDir } = path.parse(entry);
-
-  return {
-    entry,
-    entryDir,
-    ext: ext.length === 0 ? ext : ext.split(".")[1],
-    name,
-  };
-}
-
 function validateAccess({
   dir: inputDir,
   entry: entries = "index",
-  subFoldersNames = DEFAULT_DIR_FOLDERS,
+  targetedFolders = DEFAULT_DIR_FOLDERS,
   extensions = DEFAULT_EXTENSIONS,
   isValidateJson = true,
 }: ValidateAccessInput): ValidationOneEntry | ValidationMulti {
   const parsedDir = parseDir({
     dir: inputDir,
-    subFoldersNames,
+    targetedFolders,
     extensions,
     isValidateJson,
   });
 
-  const essentialResult = {
-    dir: parsedDir.dir,
-    subDir: parsedDir.subDir,
-    isJsonValid: parsedDir.isJsonValid,
-    isSrc: parsedDir.isSrc,
-    srcName: parsedDir.srcName,
-  };
+  const finalEntries = normalizeInputToArray(entries);
 
   // Discovered file inside dir?
   if (parsedDir.includeValidEntry) {
     return {
-      ...essentialResult,
-      entry: Array.isArray(entries) ? entries[0] : entries,
+      ...parsedDir,
+      entry: finalEntries[0],
       entryDir: "",
       isEntryValid: parsedDir.includeValidEntry,
-      ext: parsedDir.ext,
-      name: parsedDir.name,
     };
   }
 
-  const parsedEntries: Entry[] = [];
+  // parsing entries
+  const results = finalEntries.map((entry) => {
+    const parsedEntry = path.parse(entry);
 
-  if (Array.isArray(entries)) {
-    // parsing entries
-    entries.forEach((entry) => {
-      parsedEntries.push({ ...parseEntry(entry), isEntryValid: false });
-    });
-  } else {
-    parsedEntries.push({
-      ...parseEntry(entries),
-      isEntryValid: false,
-    });
-  }
-
-  for (let i = 0; i < parsedEntries.length; i += 1) {
-    const parsedEntry = parsedEntries[i];
+    const resolvedEntryFromSrc = extractSrcFolderFromDir(
+      entry,
+      targetedFolders
+    );
 
     const workingDir = getWorkingDir(
       parsedDir.dir,
       parsedDir.subDir,
-      parsedEntry.entryDir,
-      parsedDir.srcName
+      resolvedEntryFromSrc.subDir,
+      resolvedEntryFromSrc.srcName
     );
 
-    if (parsedEntry.ext.length === 0) {
+    console.log("file: index.ts ~ line 283 ~ workingDir", workingDir);
+
+    let isEntryValid = false;
+
+    if (parsedEntry.ext.length > 0) {
+      [, parsedEntry.ext] = parsedEntry.ext.split(".");
+
+      const resolvedPath = path.resolve(
+        workingDir,
+        `${parsedEntry.name}.${parsedEntry.ext}`
+      );
+
+      isEntryValid = fs.existsSync(resolvedPath);
+    } else {
       for (let j = 0; j < extensions.length; j += 1) {
         const resolvedPath = path.resolve(
           workingDir,
           `${parsedEntry.name}.${extensions[j]}`
         );
 
-        const isEntryValid = fs.existsSync(resolvedPath);
+        isEntryValid = fs.existsSync(resolvedPath);
 
         if (isEntryValid) {
           parsedEntry.ext = extensions[j];
-          parsedEntry.isEntryValid = true;
           break;
         }
       }
-    } else {
-      const resolvedPath = path.resolve(
-        workingDir,
-        `${parsedEntry.name}.${parsedEntry.ext}`
-      );
-      const isEntryValid = fs.existsSync(resolvedPath);
-
-      if (isEntryValid) {
-        parsedEntry.isEntryValid = true;
-      }
     }
-  }
+
+    const hasEntryDir = resolvedEntryFromSrc.subDir.length > 0;
+
+    return {
+      isEntryValid,
+      entry: hasEntryDir ? resolvedEntryFromSrc.dir : entry,
+      entryDir: resolvedEntryFromSrc.subDir,
+      name: parsedEntry.name,
+      ext: parsedEntry.ext,
+    };
+  });
 
   return {
-    ...essentialResult,
-    ...(parsedEntries.length === 1
-      ? parsedEntries[0]
-      : { entries: parsedEntries }),
+    ...parsedDir,
+    ...(results.length === 1 ? results[0] : { entries: results }),
   };
 }
 
@@ -346,6 +327,5 @@ export {
   validateAccess,
   extractSrcFolderFromDir,
   parseDirIncludesFile,
-  parseEntry,
   parseDir,
 };
