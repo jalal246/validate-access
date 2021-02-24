@@ -1,6 +1,3 @@
-/* eslint-disable no-param-reassign */
-/* eslint-disable import/prefer-default-export */
-
 /// <reference types="node" />
 
 import fs from "fs";
