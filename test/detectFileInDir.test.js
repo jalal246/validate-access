@@ -47,7 +47,11 @@ describe("detectFileInDir", () => {
 
       const res = detectFileInDir(filePath);
 
-      expect(res).to.deep.equal(noResult);
+      expect(res).to.deep.equal({
+        includeValidEntry: false,
+        ext: "js",
+        name: "b",
+      });
     });
 
     it("with invalid src folder", () => {
@@ -60,7 +64,11 @@ describe("detectFileInDir", () => {
 
       const res = detectFileInDir(filePath);
 
-      expect(res).to.deep.equal(noResult);
+      expect(res).to.deep.equal({
+        includeValidEntry: false,
+        ext: "js",
+        name: "index",
+      });
     });
   });
 

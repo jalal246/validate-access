@@ -1,262 +1,258 @@
-// const { expect } = require("chai");
-// const { resolve } = require("path");
+// @ts-check
 
-// const { parseAndValidateDir } = require("../lib");
+const { expect } = require("chai");
+const { resolve, sep } = require("path");
 
-// const source = resolve(__dirname, "fixtures");
+const { parseAndValidateDir } = require("../lib");
 
-// describe("Directory Parser", () => {
-//   describe("Directory includes root", () => {
-//     it("with default", () => {
-//       const res = parseAndValidateDir({});
+const source = resolve(__dirname, "fixtures");
 
-//       expect(res).to.deep.equal({
-//         dir: resolve("."),
-//         subDir: "",
-//         isSrc: true,
-//         srcName: "src",
-//         isJsonValid: true,
-//         includeValidEntry: false,
-//         ext: "",
-//         name: "",
-//       });
-//     });
+describe("parseAndValidateDir", () => {
+  describe("Directory includes root", () => {
+    it("with a valid json", () => {
+      const filePath = resolve(source, "valid-json");
 
-//     it("with a valid json", () => {
-//       const filePath = resolve(source, "valid-json");
+      const res = parseAndValidateDir({ dir: filePath });
 
-//       const res = parseAndValidateDir({ dir: filePath });
+      expect(res).to.deep.equal({
+        dir: resolve(source),
+        subDir: "valid-json",
+        srcName: "",
+        includeValidEntry: false,
+        ext: "",
+        name: "",
+      });
+    });
 
-//       expect(res).to.deep.equal({
-//         dir: filePath,
-//         subDir: "",
-//         isSrc: false,
-//         srcName: "",
-//         isJsonValid: true,
-//         includeValidEntry: false,
-//         ext: "",
-//         name: "",
-//       });
-//     });
+    it("with a valid json in a flat structure", () => {
+      const filePath = resolve(source, "valid-json-entries-flat");
 
-//     it("with a valid json in a flat structure", () => {
-//       const filePath = resolve(source, "valid-json-entries-flat");
+      const res = parseAndValidateDir({ dir: filePath });
 
-//       const res = parseAndValidateDir({ dir: filePath });
+      expect(res).to.deep.equal({
+        dir: resolve(source),
+        subDir: "valid-json-entries-flat",
+        srcName: "",
+        includeValidEntry: false,
+        ext: "",
+        name: "",
+      });
+    });
+  });
 
-//       expect(res).to.deep.equal({
-//         dir: filePath,
-//         subDir: "",
-//         isSrc: false,
-//         srcName: "",
-//         isJsonValid: true,
-//         includeValidEntry: false,
-//         ext: "",
-//         name: "",
-//       });
-//     });
-//   });
+  describe("Directory includes root and sub dir", () => {
+    it("with src as a sub dir", () => {
+      const expectedPath = resolve(source, "valid-json-entries-flat");
+      const filePath = resolve(source, "valid-json-entries-flat", "src");
 
-//   describe("Directory includes root and sub dir", () => {
-//     it("with src as a sub dir", () => {
-//       const expectedPath = resolve(source, "valid-json-entries-flat");
-//       const filePath = resolve(source, "valid-json-entries-flat", "src");
+      const res = parseAndValidateDir({ dir: filePath });
 
-//       const res = parseAndValidateDir({ dir: filePath });
+      expect(res).to.deep.equal({
+        dir: expectedPath,
+        subDir: "src",
+        srcName: "src",
+        includeValidEntry: false,
+        ext: "",
+        name: "",
+      });
+    });
 
-//       expect(res).to.deep.equal({
-//         dir: expectedPath,
-//         subDir: "",
-//         isSrc: true,
-//         srcName: "src",
-//         isJsonValid: true,
-//         includeValidEntry: false,
-//         ext: "",
-//         name: "",
-//       });
-//     });
+    it("with lib as a sub dir", () => {
+      const expectedPath = resolve(source, "valid-json-entry-lib");
+      const filePath = resolve(source, "valid-json-entry-lib", "lib");
 
-//     it("with lib as a sub dir", () => {
-//       const expectedPath = resolve(source, "valid-json-entry-lib");
-//       const filePath = resolve(source, "valid-json-entry-lib", "lib");
+      const res = parseAndValidateDir({ dir: filePath });
 
-//       const res = parseAndValidateDir({ dir: filePath });
+      expect(res).to.deep.equal({
+        dir: expectedPath,
+        subDir: "lib",
+        srcName: "lib",
+        includeValidEntry: false,
+        ext: "",
+        name: "",
+      });
+    });
 
-//       expect(res).to.deep.equal({
-//         dir: expectedPath,
-//         subDir: "",
-//         isSrc: true,
-//         srcName: "lib",
-//         isJsonValid: true,
-//         includeValidEntry: false,
-//         ext: "",
-//         name: "",
-//       });
-//     });
+    it("with unrecognized a sub dir", () => {
+      const subDir = "test";
+      const filePath = resolve(source, "valid-json-entry-lib", subDir);
 
-//     it("with unrecognized a sub dir", () => {
-//       const subDir = "test";
-//       const filePath = resolve(source, "valid-json-entry-lib", subDir);
+      const res = parseAndValidateDir({ dir: filePath });
 
-//       const res = parseAndValidateDir({ dir: filePath });
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entry-lib"),
+        subDir,
+        srcName: "",
+        includeValidEntry: false,
+        ext: "",
+        name: "",
+      });
+    });
+  });
 
-//       expect(res).to.deep.equal({
-//         dir: filePath,
-//         subDir: "",
-//         isSrc: false,
-//         srcName: "",
-//         isJsonValid: false,
-//         includeValidEntry: false,
-//         ext: "",
-//         name: "",
-//       });
-//     });
-//   });
+  describe("Directory includes a file name", () => {
+    it("with lib and a valid extension", () => {
+      const expectedPath = resolve(source, "valid-json-entry-lib");
+      const subDir = "lib";
+      const filePath = resolve(source, "valid-json-entry-lib", subDir, "b.ts");
 
-//   describe("Directory includes a file name", () => {
-//     it("with lib and a valid extension", () => {
-//       const expectedPath = resolve(source, "valid-json-entry-lib");
-//       const subDir = "lib";
-//       const filePath = resolve(source, "valid-json-entry-lib", subDir, "b.ts");
+      const res = parseAndValidateDir({ dir: filePath });
 
-//       const res = parseAndValidateDir({ dir: filePath });
+      expect(res).to.deep.equal({
+        dir: expectedPath,
+        subDir: "lib",
+        srcName: "lib",
+        includeValidEntry: true,
+        ext: "ts",
+        name: "b",
+      });
+    });
 
-//       expect(res).to.deep.equal({
-//         dir: expectedPath,
-//         subDir: "",
-//         isSrc: true,
-//         srcName: "lib",
-//         isJsonValid: true,
-//         includeValidEntry: true,
-//         ext: "ts",
-//         name: "b",
-//       });
-//     });
+    it("with lib but without an extension", () => {
+      const expectedPath = resolve(source, "valid-json-entry-lib");
+      const subDir = "lib";
+      const filePath = resolve(source, "valid-json-entry-lib", subDir, "b");
 
-//     it("with lib but without an extension", () => {
-//       const expectedPath = resolve(source, "valid-json-entry-lib");
-//       const subDir = "lib";
-//       const filePath = resolve(source, "valid-json-entry-lib", subDir, "b");
+      const res = parseAndValidateDir({ dir: filePath });
 
-//       const res = parseAndValidateDir({ dir: filePath });
+      expect(res).to.deep.equal({
+        dir: expectedPath,
+        subDir: `lib${sep}b`,
+        srcName: "lib",
+        includeValidEntry: true,
+        ext: "ts",
+        name: "b",
+      });
+    });
 
-//       expect(res).to.deep.equal({
-//         dir: expectedPath,
-//         subDir: "",
-//         isSrc: true,
-//         srcName: "lib",
-//         isJsonValid: true,
-//         includeValidEntry: true,
-//         ext: "ts",
-//         name: "b",
-//       });
-//     });
+    it("with unrecognized sub folder[test] and without an extension - invalid", () => {
+      const filePath = resolve(source, "valid-json-entry-lib", "test", "b");
 
-//     it("with unrecognized sub folder[test] and without an extension - invalid", () => {
-//       const filePath = resolve(source, "valid-json-entry-lib", "test", "b");
+      const res = parseAndValidateDir({ dir: filePath });
 
-//       const res = parseAndValidateDir({ dir: filePath });
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entry-lib", "test"),
+        subDir: "b",
+        srcName: "",
+        includeValidEntry: false,
+        ext: "",
+        name: "",
+      });
+    });
 
-//       expect(res).to.deep.equal({
-//         dir: filePath,
-//         subDir: "",
-//         isSrc: false,
-//         srcName: "",
-//         isJsonValid: false,
-//         includeValidEntry: false,
-//         ext: "",
-//         name: "",
-//       });
-//     });
+    it("with unrecognized sub folder[test] but with an extension - invalid", () => {
+      const filePath = resolve(source, "valid-json-entry-lib", "test", "b.ts");
 
-//     it("with unrecognized sub folder[test] but with an extension - invalid", () => {
-//       const filePath = resolve(source, "valid-json-entry-lib", "test", "b.ts");
+      const res = parseAndValidateDir({ dir: filePath });
 
-//       const res = parseAndValidateDir({ dir: filePath });
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entry-lib"),
+        subDir: "test",
+        srcName: "",
+        includeValidEntry: false,
+        ext: "ts",
+        name: "b",
+      });
+    });
 
-//       expect(res).to.deep.equal({
-//         dir: filePath,
-//         subDir: "",
-//         isSrc: false,
-//         srcName: "",
-//         isJsonValid: false,
-//         includeValidEntry: false,
-//         ext: "",
-//         name: "",
-//       });
-//     });
+    it("with unrecognized sub folder[random] and without an extension - valid", () => {
+      const filePath = resolve(source, "valid-json-entry-lib", "random", "b");
 
-//     it("with unrecognized sub folder[random] and without an extension - valid", () => {
-//       const filePath = resolve(source, "valid-json-entry-lib", "random", "b");
+      const res = parseAndValidateDir({ dir: filePath });
 
-//       const res = parseAndValidateDir({ dir: filePath });
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entry-lib"),
+        subDir: "random",
+        srcName: "",
+        includeValidEntry: true,
+        ext: "ts",
+        name: "b",
+      });
+    });
 
-//       expect(res).to.deep.equal({
-//         dir: filePath,
-//         subDir: "",
-//         isSrc: false,
-//         srcName: "",
-//         isJsonValid: false,
-//         includeValidEntry: true,
-//         ext: "ts",
-//         name: "b",
-//       });
-//     });
+    it("with unrecognized sub folder[random] but with an extension - valid", () => {
+      const filePath = resolve(
+        source,
+        "valid-json-entry-lib",
+        "random",
+        "b.ts"
+      );
 
-//     it("with unrecognized sub folder[random] but with an extension - valid", () => {
-//       const filePath = resolve(
-//         source,
-//         "valid-json-entry-lib",
-//         "random",
-//         "b.ts"
-//       );
+      const res = parseAndValidateDir({ dir: filePath });
 
-//       const res = parseAndValidateDir({ dir: filePath });
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entry-lib"),
+        subDir: "random",
+        srcName: "",
+        includeValidEntry: true,
+        ext: "ts",
+        name: "b",
+      });
+    });
 
-//       expect(res).to.deep.equal({
-//         dir: filePath,
-//         subDir: "",
-//         isSrc: false,
-//         srcName: "",
-//         isJsonValid: false,
-//         includeValidEntry: true,
-//         ext: "ts",
-//         name: "b",
-//       });
-//     });
+    it("with a valid file name no folder", () => {
+      const filePath = resolve(source, "valid-json-entries-flat", "a");
 
-//     it("with a valid file name no folder", () => {
-//       const filePath = resolve(source, "valid-json-entries-flat", "a");
+      const res = parseAndValidateDir({ dir: filePath });
 
-//       const res = parseAndValidateDir({ dir: filePath });
+      expect(res).to.deep.equal({
+        dir: source,
+        subDir: "valid-json-entries-flat",
+        srcName: "",
+        includeValidEntry: true,
+        ext: "js",
+        name: "a",
+      });
+    });
 
-//       expect(res).to.deep.equal({
-//         dir: filePath,
-//         subDir: "",
-//         isSrc: false,
-//         srcName: "",
-//         isJsonValid: false,
-//         includeValidEntry: true,
-//         ext: "js",
-//         name: "a",
-//       });
-//     });
+    it("with invalid file name no folder", () => {
+      const filePath = resolve(source, "valid-json-entries-flat", "x");
 
-//     it("with file name and extension", () => {
-//       const filePath = resolve(source, "valid-json-entries-flat", "a.js");
+      const res = parseAndValidateDir({ dir: filePath });
 
-//       const res = parseAndValidateDir({ dir: filePath });
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entries-flat"),
+        subDir: "x",
+        srcName: "",
+        includeValidEntry: false,
+        ext: "",
+        name: "",
+      });
+    });
 
-//       expect(res).to.deep.equal({
-//         dir: filePath,
-//         subDir: "",
-//         isSrc: false,
-//         srcName: "",
-//         isJsonValid: false,
-//         includeValidEntry: true,
-//         ext: "js",
-//         name: "a",
-//       });
-//     });
-//   });
-// });
+    it("with file name and extension", () => {
+      const filePath = resolve(source, "valid-json-entries-flat", "a.js");
+
+      const res = parseAndValidateDir({ dir: filePath });
+
+      expect(res).to.deep.equal({
+        dir: source,
+        subDir: "valid-json-entries-flat",
+        srcName: "",
+        includeValidEntry: true,
+        ext: "js",
+        name: "a",
+      });
+    });
+
+    it("with a valid sub dir", () => {
+      const filePath = resolve(
+        source,
+        "valid-json-entry-lib",
+        "random",
+        "b.ts"
+      );
+
+      const res = parseAndValidateDir({ dir: filePath });
+
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entry-lib"),
+        subDir: "random",
+        srcName: "",
+        includeValidEntry: true,
+        ext: "ts",
+        name: "b",
+      });
+    });
+  });
+});

@@ -7,27 +7,18 @@ const { parseDir } = require("../lib");
 const source = resolve(__dirname, "fixtures");
 
 describe("parseDir", () => {
-  const noResult = (dir) => ({
-    dir,
-    subDir: "",
-    srcName: "",
-    filename: "",
-  });
-
   describe("No Result:", () => {
-    it("with default", () => {
-      const filePath = ".";
-      const res = parseDir(filePath);
-
-      expect(res).to.deep.equal(noResult(filePath));
-    });
-
-    it("with skip a valid-json dir", () => {
+    it("with a valid-json dir", () => {
       const filePath = resolve(source, "valid-json");
 
       const res = parseDir(filePath);
 
-      expect(res).to.deep.equal(noResult(filePath));
+      expect(res).to.deep.equal({
+        dir: resolve(source),
+        subDir: "valid-json",
+        srcName: "",
+        filename: "",
+      });
     });
 
     it("with a valid-json-entries-flat dir", () => {
@@ -35,7 +26,12 @@ describe("parseDir", () => {
 
       const res = parseDir(filePath);
 
-      expect(res).to.deep.equal(noResult(filePath));
+      expect(res).to.deep.equal({
+        dir: resolve(source),
+        subDir: "valid-json-entries-flat",
+        srcName: "",
+        filename: "",
+      });
     });
   });
 
@@ -48,7 +44,7 @@ describe("parseDir", () => {
 
       expect(res).to.deep.equal({
         dir: expectedPath,
-        subDir: "",
+        subDir: "src",
         srcName: "src",
         filename: "",
       });
@@ -56,26 +52,29 @@ describe("parseDir", () => {
 
     it("with lib folder - no sub dir", () => {
       const expectedPath = resolve(source, "valid-json-entry-lib");
-      const subDir = "lib";
-      const filePath = resolve(source, "valid-json-entry-lib", subDir);
+      const filePath = resolve(source, "valid-json-entry-lib", "lib");
 
       const res = parseDir(filePath);
 
       expect(res).to.deep.equal({
         dir: expectedPath,
-        subDir: "",
+        subDir: "lib",
         filename: "",
         srcName: "lib",
       });
     });
 
     it("with unrecognized a sub dir", () => {
-      const subDir = "test";
-      const filePath = resolve(source, "valid-json-entry-lib", subDir);
+      const filePath = resolve(source, "valid-json-entry-lib", "test");
 
       const res = parseDir(filePath);
 
-      expect(res).to.deep.equal(noResult(filePath));
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entry-lib"),
+        subDir: "test",
+        filename: "",
+        srcName: "",
+      });
     });
   });
 
@@ -89,23 +88,8 @@ describe("parseDir", () => {
 
       expect(res).to.deep.equal({
         dir: expectedPath,
-        subDir: "",
+        subDir: "lib",
         filename: "b.ts",
-        srcName: "lib",
-      });
-    });
-
-    it("with lib but without an extension", () => {
-      const expectedPath = resolve(source, "valid-json-entry-lib");
-      const subDir = "lib";
-      const filePath = resolve(source, "valid-json-entry-lib", subDir, "b");
-
-      const res = parseDir(filePath);
-
-      expect(res).to.deep.equal({
-        dir: expectedPath,
-        subDir: "b",
-        filename: "",
         srcName: "lib",
       });
     });
@@ -115,31 +99,51 @@ describe("parseDir", () => {
 
       const res = parseDir(filePath);
 
-      expect(res).to.deep.equal(noResult(filePath));
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entry-lib", "test"),
+        filename: "",
+        subDir: "b",
+        srcName: "",
+      });
     });
 
-    it("with unrecognized sub folder[test] but with an extension", () => {
+    it("with unrecognized sub folder[test] but with an extension.", () => {
       const filePath = resolve(source, "valid-json-entry-lib", "test", "b.ts");
 
       const res = parseDir(filePath);
 
-      expect(res).to.deep.equal(noResult(filePath));
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entry-lib"),
+        filename: "b.ts",
+        subDir: "test",
+        srcName: "",
+      });
     });
 
-    it("with a file name skip", () => {
+    it("with a file name not extension", () => {
       const filePath = resolve(source, "valid-json-entries-flat", "a");
 
       const res = parseDir(filePath);
 
-      expect(res).to.deep.equal(noResult(filePath));
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entries-flat"),
+        filename: "",
+        subDir: "a",
+        srcName: "",
+      });
     });
 
-    it("with file name and extension skip", () => {
+    it("with a file name and extension", () => {
       const filePath = resolve(source, "valid-json-entries-flat", "a.js");
 
       const res = parseDir(filePath);
 
-      expect(res).to.deep.equal(noResult(filePath));
+      expect(res).to.deep.equal({
+        dir: resolve(source),
+        filename: "a.js",
+        subDir: "valid-json-entries-flat",
+        srcName: "",
+      });
     });
   });
 
@@ -150,7 +154,7 @@ describe("parseDir", () => {
     const expectedResult = {
       dir: expectedPath,
       filename: "b.ts",
-      subDir: "",
+      subDir: "dist",
       srcName: "dist",
     };
 
@@ -173,9 +177,90 @@ describe("parseDir", () => {
 
       expect(res).to.deep.equal({
         dir: "",
-        subDir: "",
+        subDir: "lib",
         filename: "b.ts",
         srcName: "lib",
+      });
+    });
+  });
+
+  describe("Detect sub dir", () => {
+    it("With a valid sub dir", () => {
+      const filePath = resolve(
+        source,
+        "valid-json-entry-lib",
+        "random",
+        "b.ts"
+      );
+
+      const res = parseDir(filePath);
+
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entry-lib"),
+        subDir: "random",
+        filename: "b.ts",
+        srcName: "",
+      });
+    });
+
+    it("With a valid sub dir and src name", () => {
+      const expectedPath = resolve(source, "valid-json-entry-lib");
+      const filePath = resolve(source, "valid-json-entry-lib", "lib", "random");
+
+      const res = parseDir(filePath);
+
+      expect(res).to.deep.equal({
+        dir: expectedPath,
+        subDir: `lib${sep}random`,
+        filename: "",
+        srcName: "lib",
+      });
+    });
+
+    it("With a valid sub dir and src name", () => {
+      const expectedPath = resolve(source, "valid-json-entry-lib");
+      const filePath = resolve(
+        source,
+        "valid-json-entry-lib",
+        "lib",
+        "random",
+        "a.js"
+      );
+
+      const res = parseDir(filePath);
+
+      expect(res).to.deep.equal({
+        dir: expectedPath,
+        subDir: `lib${sep}random`,
+        filename: "a.js",
+        srcName: "lib",
+      });
+    });
+
+    it("with lib but without an extension", () => {
+      const expectedPath = resolve(source, "valid-json-entry-lib");
+      const filePath = resolve(source, "valid-json-entry-lib", "lib", "b");
+
+      const res = parseDir(filePath);
+
+      expect(res).to.deep.equal({
+        dir: expectedPath,
+        subDir: `lib${sep}b`,
+        filename: "",
+        srcName: "lib",
+      });
+    });
+
+    it("with unrecognized sub folder[random] and a file without an extension", () => {
+      const filePath = resolve(source, "valid-json-entry-lib", "random", "b");
+
+      const res = parseDir(filePath);
+
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entry-lib", "random"),
+        subDir: `b`,
+        filename: "",
+        srcName: "",
       });
     });
   });

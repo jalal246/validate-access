@@ -86,6 +86,7 @@ function parseDir(
   targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS
 ) {
   let dir = path.normalize(pureDir);
+
   let subDir = "";
   let filename = "";
   let srcName = "";
@@ -107,13 +108,37 @@ function parseDir(
       [dir, subDir] = pureDir.split(reg);
 
       if (isFile(subDir)) {
-        filename = subDir;
-        subDir = "";
+        // does this file had any additional sub?
+        const parsedSub = path.parse(subDir);
+        filename = parsedSub.dir.length === 0 ? subDir : parsedSub.base;
+        subDir = parsedSub.dir;
       }
 
       break;
     } else {
       srcName = "";
+    }
+  }
+
+  if (subDir.length === 0) {
+    subDir = srcName;
+  } else {
+    subDir = srcName + path.sep + subDir;
+  }
+
+  if (subDir.length === 0 && filename.length === 0 && srcName.length === 0) {
+    const parsedDir = path.parse(dir);
+
+    if (isFile(parsedDir.base)) {
+      filename = parsedDir.base;
+
+      const parsedForSub = path.parse(parsedDir.dir);
+
+      subDir = parsedForSub.base;
+      dir = parsedForSub.dir;
+    } else {
+      subDir = parsedDir.base;
+      dir = parsedDir.dir;
     }
   }
 
@@ -201,6 +226,7 @@ function detectFileInDir(
     // to/src/b or  to/b or to
     parsedSubDir.ext = searchForExtInDir(dir, extensions);
     isInsertExt = parsedSubDir.ext.length > 0;
+
     if (!isInsertExt) {
       return {
         includeValidEntry: false,
@@ -208,21 +234,14 @@ function detectFileInDir(
         name: "",
       };
     }
+
+    includeValidEntry = validate(`${dir}.${parsedSubDir.ext}`);
   } else if (parsedSubDir.ext.includes(".")) {
     [, parsedSubDir.ext] = parsedSubDir.ext.split(".");
+
+    includeValidEntry = validate(dir);
   }
 
-  includeValidEntry = validate(
-    isInsertExt ? `${dir}.${parsedSubDir.ext}` : dir
-  );
-
-  if (!includeValidEntry) {
-    return {
-      includeValidEntry: false,
-      ext: "",
-      name: "",
-    };
-  }
   return {
     includeValidEntry,
     ext: parsedSubDir.ext,
@@ -258,8 +277,15 @@ function parseAndValidateDir({
 
   dir = path.normalize(dir);
 
-  const resolvedDirFromSrc = parseDir(dir, targetedFolders);
+  const { filename, ...resolvedDirFromSrc } = parseDir(dir, targetedFolders);
+
   const parsedDirWithValidFile = detectFileInDir(dir, extensions);
+
+  if (resolvedDirFromSrc.subDir === parsedDirWithValidFile.name) {
+    const parsedDirWithoutFile = path.parse(resolvedDirFromSrc.dir);
+    resolvedDirFromSrc.dir = parsedDirWithoutFile.dir;
+    resolvedDirFromSrc.subDir = parsedDirWithoutFile.base;
+  }
 
   return {
     ...resolvedDirFromSrc,
