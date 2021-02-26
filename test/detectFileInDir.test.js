@@ -2,11 +2,11 @@
 const { expect } = require("chai");
 const { resolve } = require("path");
 
-const { parseDirIncludesFile } = require("../lib");
+const { detectFileInDir } = require("../lib");
 
 const source = resolve(__dirname, "fixtures");
 
-describe("parseDirIncludesFile", () => {
+describe("detectFileInDir", () => {
   const noResult = {
     includeValidEntry: false,
     ext: "",
@@ -15,8 +15,8 @@ describe("parseDirIncludesFile", () => {
 
   describe("Invalid includeValidEntry", () => {
     it("with default", () => {
-      const filePath = ".";
-      const res = parseDirIncludesFile(filePath);
+      const filePath = resolve(".");
+      const res = detectFileInDir(filePath);
 
       expect(res).to.deep.equal(noResult);
     });
@@ -24,7 +24,7 @@ describe("parseDirIncludesFile", () => {
     it("with dir only", () => {
       const filePath = resolve(source, "valid-json-entries-flat");
 
-      const res = parseDirIncludesFile(filePath);
+      const res = detectFileInDir(filePath);
 
       expect(res).to.deep.equal(noResult);
     });
@@ -32,7 +32,7 @@ describe("parseDirIncludesFile", () => {
     it("with src folder only", () => {
       const filePath = resolve(source, "valid-json-entries-flat", "src");
 
-      const res = parseDirIncludesFile(filePath);
+      const res = detectFileInDir(filePath);
 
       expect(res).to.deep.equal(noResult);
     });
@@ -45,7 +45,7 @@ describe("parseDirIncludesFile", () => {
         "b.js"
       );
 
-      const res = parseDirIncludesFile(filePath);
+      const res = detectFileInDir(filePath);
 
       expect(res).to.deep.equal(noResult);
     });
@@ -58,7 +58,7 @@ describe("parseDirIncludesFile", () => {
         "index.js"
       );
 
-      const res = parseDirIncludesFile(filePath);
+      const res = detectFileInDir(filePath);
 
       expect(res).to.deep.equal(noResult);
     });
@@ -75,7 +75,7 @@ describe("parseDirIncludesFile", () => {
       const subDir = "lib";
       const filePath = resolve(source, "valid-json-entry-lib", subDir, "b.ts");
 
-      const res = parseDirIncludesFile(filePath);
+      const res = detectFileInDir(filePath);
 
       expect(res).to.deep.equal(resultBDotTS);
     });
@@ -84,7 +84,7 @@ describe("parseDirIncludesFile", () => {
       const subDir = "lib";
       const filePath = resolve(source, "valid-json-entry-lib", subDir, "b");
 
-      const res = parseDirIncludesFile(filePath);
+      const res = detectFileInDir(filePath);
 
       expect(res).to.deep.equal(resultBDotTS);
     });
