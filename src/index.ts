@@ -3,17 +3,7 @@
 import fs from "fs";
 import path from "path";
 
-// [
-//   ".js",
-//   ".jsx",
-//   ".es6",
-//   ".es",
-//   ".mjs",
-//   ".cjs",
-// ]
-// const EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".es6", ".es", ".mjs"];
-
-const DEFAULT_EXTENSIONS: string[] = ["js", "ts"];
+const DEFAULT_EXTENSIONS: string[] = ["js", "ts", "jsx", "tsx"];
 const DEFAULT_DIR_FOLDERS: string[] = ["src", "lib", "dist"];
 const PKG_JSON = "package.json";
 
@@ -30,6 +20,8 @@ interface ParseDirInput {
   dir?: string;
   targetedFolders?: string | string[];
   extensions?: string | string[];
+  isEnforceSub?: boolean;
+  isEnforceSrcLookup?: boolean;
 }
 
 interface ValidateAccessInput extends ParseDirInput {
@@ -109,10 +101,12 @@ function lookupSrcInDir(pureDir: string, targetedFolders: string | string[]) {
  *
  * @param pureDir
  * @param targetedFolders
+ * @param isEnforceSub
  */
 function parseDir(
   pureDir: string,
-  targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS
+  targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS,
+  isEnforceSub: boolean = true
 ) {
   let dir = path.normalize(pureDir);
 
@@ -149,7 +143,7 @@ function parseDir(
 
       subDir = parsedForSub.base;
       dir = parsedForSub.dir;
-    } else {
+    } else if (isEnforceSub) {
       subDir = parsedDir.base;
       dir = parsedDir.dir;
     }
@@ -270,6 +264,8 @@ function parseAndValidateDir({
   dir: pureDir,
   targetedFolders = DEFAULT_DIR_FOLDERS,
   extensions = DEFAULT_EXTENSIONS,
+  isEnforceSub = true,
+  isEnforceSrcLookup = true,
 }: ParseDirInput): ParseDirOutput {
   let dir = pureDir;
 
@@ -290,18 +286,36 @@ function parseAndValidateDir({
 
   dir = path.normalize(dir);
 
+  const parsedDirWithValidFile = detectFileInDir(dir, extensions);
+
   const { filename, ...resolvedDirFromSrc } = parseDir(
     dir,
     targetedFolders,
-    false
+    isEnforceSub
   );
 
-  const parsedDirWithValidFile = detectFileInDir(dir, extensions);
+  if (resolvedDirFromSrc.srcName.length === 0 && isEnforceSrcLookup) {
+    resolvedDirFromSrc.srcName = searchForSrcFolderInDir(dir, targetedFolders);
+  }
 
-  if (resolvedDirFromSrc.subDir === parsedDirWithValidFile.name) {
-    const parsedDirWithoutFile = path.parse(resolvedDirFromSrc.dir);
-    resolvedDirFromSrc.dir = parsedDirWithoutFile.dir;
-    resolvedDirFromSrc.subDir = parsedDirWithoutFile.base;
+  if (parsedDirWithValidFile.includeValidEntry) {
+    if (resolvedDirFromSrc.subDir.length === 0) {
+      const parsedDirWithoutFile = path.parse(resolvedDirFromSrc.dir);
+      resolvedDirFromSrc.dir = parsedDirWithoutFile.dir;
+    } else if (resolvedDirFromSrc.subDir === parsedDirWithValidFile.name) {
+      const parsedDirWithoutFile = path.parse(resolvedDirFromSrc.dir);
+      resolvedDirFromSrc.dir = parsedDirWithoutFile.dir;
+      resolvedDirFromSrc.subDir = parsedDirWithoutFile.base;
+    }
+
+    if (filename.length === 0) {
+      if (
+        resolvedDirFromSrc.srcName.length > 0 &&
+        resolvedDirFromSrc.subDir.includes(resolvedDirFromSrc.srcName)
+      ) {
+        resolvedDirFromSrc.subDir = resolvedDirFromSrc.srcName;
+      }
+    }
   }
 
   return {
@@ -310,98 +324,62 @@ function parseAndValidateDir({
   };
 }
 
-function parseEntry(entry: string, foldersName: string[] | string) {
-  const lookForSrcRes = lookupSrcInDir(entry, foldersName);
+// interface resolveConflictedDirInput {
+//   dir: string;
+//   subDir: string;
+//   isSrc: boolean;
+//   srcName: string;
+// }
 
-  const { srcName } = lookForSrcRes;
+// function resolveConflictedDir(
+//   mainDir: resolveConflictedDirInput,
+//   dirBranch: resolveConflictedDirInput,
+//   targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS
+// ) {
+//   const dirObj = mainDir;
+//   const entryObj = dirBranch;
 
-  let dir = "";
-  let subDir = "";
-  let filename = "";
+//   if (entryObj.isSrc) {
+//     if (!dirObj.isSrc) {
+//       dirObj.isSrc = true;
+//       dirObj.srcName = entryObj.srcName;
 
-  if (srcName.length > 0) {
-    // TODO: fix it.
-    // @ts-expect-error
-    [dir, subDir = ""] = entry.split(lookForSrcRes.reg);
-  }
+//       if (dirObj.subDir.length === 0) {
+//         dirObj.subDir = entryObj.subDir;
+//       } else {
+//         dirObj.subDir += path.sep + entryObj.subDir;
+//       }
+//       entryObj.subDir = "";
 
-  if (isFile(subDir)) {
-    // does this file had any additional sub?
-    const parsedSub = path.parse(subDir);
-    filename = parsedSub.dir.length === 0 ? subDir : parsedSub.base;
-    subDir = parsedSub.dir;
-  }
+//       return { dir: dirObj, entry: entryObj };
+//     }
 
-  if (subDir.length === 0) {
-    subDir = srcName;
-  } else {
-    subDir = srcName + path.sep + subDir;
-  }
+//     if (entryObj.srcName === dirObj.srcName) {
+//       entryObj.isSrc = false;
+//       entryObj.srcName = "";
 
-  return {
-    dir,
-    srcName,
-    subDir,
-    filename,
-  };
-}
+//       return { dir: dirObj, entry: entryObj };
+//     }
 
-interface resolveConflictedDirInput {
-  dir: string;
-  subDir: string;
-  isSrc: boolean;
-  srcName: string;
-}
+//     dirObj.srcName += path.sep + entryObj.srcName;
+//     dirObj.subDir += path.sep + entryObj.subDir;
 
-function resolveConflictedDir(
-  mainDir: resolveConflictedDirInput,
-  dirBranch: resolveConflictedDirInput,
-  targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS
-) {
-  const dirObj = mainDir;
-  const entryObj = dirBranch;
+//     entryObj.isSrc = false;
+//     entryObj.srcName = "";
+//     entryObj.subDir = "";
 
-  if (entryObj.isSrc) {
-    if (!dirObj.isSrc) {
-      dirObj.isSrc = true;
-      dirObj.srcName = entryObj.srcName;
+//     return { dir: dirObj, entry: entryObj };
+//   }
 
-      if (dirObj.subDir.length === 0) {
-        dirObj.subDir = entryObj.subDir;
-      } else {
-        dirObj.subDir += path.sep + entryObj.subDir;
-      }
-      entryObj.subDir = "";
+//   if (!dirObj.isSrc) {
+//     ({ isSrc: dirObj.isSrc, srcName: dirObj.srcName } = searchForSrcFolderInDir(
+//       dirObj.dir,
+//       targetedFolders
+//     ));
+//   }
 
-      return { dir: dirObj, entry: entryObj };
-    }
-
-    if (entryObj.srcName === dirObj.srcName) {
-      entryObj.isSrc = false;
-      entryObj.srcName = "";
-
-      return { dir: dirObj, entry: entryObj };
-    }
-
-    dirObj.srcName += path.sep + entryObj.srcName;
-    dirObj.subDir += path.sep + entryObj.subDir;
-
-    entryObj.isSrc = false;
-    entryObj.srcName = "";
-    entryObj.subDir = "";
-
-    return { dir: dirObj, entry: entryObj };
-  }
-
-  if (!dirObj.isSrc) {
-    ({ isSrc: dirObj.isSrc, srcName: dirObj.srcName } = searchForSrcFolderInDir(
-      dirObj.dir,
-      targetedFolders
-    ));
-  }
-
-  return { dir: dirObj, entry: entryObj };
-}
+//   return { dir: dirObj, entry: entryObj };
+// }
 
 function isDirHaSub(dir: string, subDir: string) {
   return (
@@ -452,6 +430,7 @@ function validateAccess({
     dir: inputDir,
     targetedFolders,
     extensions,
+    isEnforceSub: false,
   });
 
   const finalEntries = normalizeInputToArray(entries);
@@ -459,7 +438,7 @@ function validateAccess({
   const { includeValidEntry, ...restDirInfo } = parsedDir;
 
   // Discovered file inside dir?
-  if (parsedDir.includeValidEntry) {
+  if (restDirInfo.ext.length > 0) {
     return {
       isJsonValid: isValidateJson ? validate(restDirInfo.dir, PKG_JSON) : null,
       ...restDirInfo,

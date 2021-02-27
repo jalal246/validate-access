@@ -117,7 +117,7 @@ describe("parseAndValidateDir", () => {
 
       expect(res).to.deep.equal({
         dir: expectedPath,
-        subDir: `lib${sep}b`,
+        subDir: `lib`,
         srcName: "lib",
         includeValidEntry: true,
         ext: "ts",
