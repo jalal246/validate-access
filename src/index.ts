@@ -133,15 +133,13 @@ function parseDir(
       filename = parsedSub.dir.length === 0 ? subDir : parsedSub.base;
       subDir = parsedSub.dir;
     }
-  }
 
-  if (subDir.length === 0) {
-    subDir = srcName;
+    if (subDir.length === 0) {
+      subDir = srcName;
+    } else {
+      subDir = srcName + path.sep + subDir;
+    }
   } else {
-    subDir = srcName + path.sep + subDir;
-  }
-
-  if (subDir.length === 0 && filename.length === 0 && srcName.length === 0) {
     const parsedDir = path.parse(dir);
 
     if (isFile(parsedDir.base)) {
@@ -292,7 +290,11 @@ function parseAndValidateDir({
 
   dir = path.normalize(dir);
 
-  const { filename, ...resolvedDirFromSrc } = parseDir(dir, targetedFolders);
+  const { filename, ...resolvedDirFromSrc } = parseDir(
+    dir,
+    targetedFolders,
+    false
+  );
 
   const parsedDirWithValidFile = detectFileInDir(dir, extensions);
 
