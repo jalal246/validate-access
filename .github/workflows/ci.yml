@@ -41,9 +41,9 @@ jobs:
       - name: Run lint
         run: yarn eslint .
 
-  test:
-    name: Unit Test
-    runs-on: ubuntu-latest
+  test-windows:
+    name: Unit Test On Windows
+    runs-on: windows-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@master

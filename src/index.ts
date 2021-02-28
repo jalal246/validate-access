@@ -501,8 +501,6 @@ function validateAccess({
       }
     }
 
-    // const hasEntryDir = resolvedEntryFromSrc.subDir.length > 0;
-
     return {
       isEntryValid,
       entry: pureEntry,
