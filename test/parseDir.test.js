@@ -6,7 +6,7 @@ const { parseDir } = require("../lib");
 
 const source = resolve(__dirname, "fixtures");
 
-describe("parseDir", () => {
+describe.only("parseDir", () => {
   describe("No Result:", () => {
     it("with a valid-json dir", () => {
       const filePath = resolve(source, "valid-json");
