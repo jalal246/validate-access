@@ -410,23 +410,24 @@ function isDirHaSub(dir: string, subDir: string) {
   );
 }
 
-function getWorkingDir(
+function resolveActiveDir(
   baseDir: string,
   subDir: string,
+  dirSrcName: string,
   entryDir: string,
-  srcName: string,
+  entrySrcName: string,
   isInsetSrc: boolean = true
 ): string {
   let upgradeBaseDir = baseDir;
 
   if (isInsetSrc) {
-    const isSubDirHasSrc = isDirHaSub(subDir, srcName);
-    const isEntryDirHasSrc = isDirHaSub(entryDir, srcName);
+    const isSubDirHasSrc = isDirHaSub(subDir, dirSrcName);
+    const isEntryDirHasSrc = isDirHaSub(entryDir, dirSrcName);
 
     const mustInsetSrc = !isSubDirHasSrc && !isEntryDirHasSrc;
 
     if (mustInsetSrc) {
-      upgradeBaseDir = path.resolve(baseDir, srcName);
+      upgradeBaseDir = path.resolve(baseDir, dirSrcName);
     }
   }
 
@@ -483,6 +484,7 @@ function validateAccess({
     const parsedEntry = path.parse(entry);
 
     const resolvedEntryFromSrc = parseDir(entry, targetedFolders);
+
     let isInsetSrc = true;
 
     if (
@@ -494,11 +496,12 @@ function validateAccess({
       isInsetSrc = false;
     }
 
-    const workingDir = getWorkingDir(
+    const activeDir = resolveActiveDir(
       resolvedDir.dir,
       resolvedDir.subDir,
-      resolvedEntryFromSrc.dir,
       resolvedDir.srcName,
+      resolvedEntryFromSrc.dir,
+      resolvedEntryFromSrc.srcName,
       isInsetSrc
     );
 
@@ -508,7 +511,7 @@ function validateAccess({
       [, parsedEntry.ext] = parsedEntry.ext.split(".");
 
       const resolvedPath = path.resolve(
-        workingDir,
+        activeDir,
         `${parsedEntry.name}.${parsedEntry.ext}`
       );
 
@@ -516,7 +519,7 @@ function validateAccess({
     } else {
       for (let j = 0; j < extensions.length; j += 1) {
         const resolvedPath = path.resolve(
-          workingDir,
+          activeDir,
           `${parsedEntry.name}.${extensions[j]}`
         );
 

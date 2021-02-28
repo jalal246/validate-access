@@ -567,7 +567,25 @@ describe("Validate Access", () => {
       });
     });
 
-    it("Entry with invalid source folder", () => {
+    it("Entry with source folder lib and invalid extension", () => {
+      const filePath = resolve(source, "valid-json-entry-lib");
+      const entry = "lib/b.ts";
+      const res = validateAccess({ entry, dir: filePath });
+
+      expect(res).to.deep.equal({
+        dir: filePath,
+        subDir: "",
+        entry,
+        entryDir: "lib",
+        isJsonValid: true,
+        srcName: "lib",
+        isEntryValid: false,
+        name: "b",
+        ext: "ts",
+      });
+    });
+
+    it.skip("Entry with invalid source folder", () => {
       const filePath = resolve(source, "valid-json-entry-lib");
       const entry = "noop/index.js";
       const res = validateAccess({ dir: filePath, entry });
