@@ -299,9 +299,28 @@ function parseAndValidateDir({
   }
 
   if (parsedDirWithValidFile.includeValidEntry) {
+    /**
+     * For a flat structure with an directory has valid file without an extension:
+     * 
+     * resolvedDirFromSrc {
+        dir: 'D:\\projects\\validate-access\\test\\fixtures\\valid-json-entries-flat\\index',
+        subDir: '',
+        srcName: ''
+      }
+     */
     if (resolvedDirFromSrc.subDir.length === 0) {
       const parsedDirWithoutFile = path.parse(resolvedDirFromSrc.dir);
       resolvedDirFromSrc.dir = parsedDirWithoutFile.dir;
+      /**
+       * For a flat structure with an directory has valid file without an
+       * extension an enforced sub dir:
+       * 
+       * resolvedDirFromSrc {
+          dir: 'D:\\projects\\validate-access\\test\\fixtures\\valid-json-entries-flat\\',
+          subDir: 'index',
+          srcName: ''
+      }
+     */
     } else if (resolvedDirFromSrc.subDir === parsedDirWithValidFile.name) {
       const parsedDirWithoutFile = path.parse(resolvedDirFromSrc.dir);
       resolvedDirFromSrc.dir = parsedDirWithoutFile.dir;
@@ -395,17 +414,20 @@ function getWorkingDir(
   baseDir: string,
   subDir: string,
   entryDir: string,
-  srcName: string
+  srcName: string,
+  isInsetSrc: boolean = true
 ): string {
   let upgradeBaseDir = baseDir;
 
-  const isSubDirHasSrc = isDirHaSub(subDir, srcName);
-  const isEntryDirHasSrc = isDirHaSub(entryDir, srcName);
+  if (isInsetSrc) {
+    const isSubDirHasSrc = isDirHaSub(subDir, srcName);
+    const isEntryDirHasSrc = isDirHaSub(entryDir, srcName);
 
-  const mustInsetSrc = !isSubDirHasSrc && !isEntryDirHasSrc;
+    const mustInsetSrc = !isSubDirHasSrc && !isEntryDirHasSrc;
 
-  if (mustInsetSrc) {
-    upgradeBaseDir = path.resolve(baseDir, srcName);
+    if (mustInsetSrc) {
+      upgradeBaseDir = path.resolve(baseDir, srcName);
+    }
   }
 
   if (subDir.length > 0) {
@@ -461,12 +483,23 @@ function validateAccess({
     const parsedEntry = path.parse(entry);
 
     const resolvedEntryFromSrc = parseDir(entry, targetedFolders);
+    let isInsetSrc = true;
+
+    if (
+      resolvedEntryFromSrc.subDir.length > 0 &&
+      resolvedEntryFromSrc.srcName.length === 0 &&
+      resolvedEntryFromSrc.filename.length > 0
+    ) {
+      // in this case we have folder unrecognized.
+      isInsetSrc = false;
+    }
 
     const workingDir = getWorkingDir(
       resolvedDir.dir,
       resolvedDir.subDir,
       resolvedEntryFromSrc.dir,
-      resolvedDir.srcName
+      resolvedDir.srcName,
+      isInsetSrc
     );
 
     let isEntryValid = false;

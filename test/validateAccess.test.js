@@ -586,51 +586,6 @@ describe("Validate Access", () => {
     });
   });
 
-  describe("All provided as inputs", () => {
-    it("Targeting non-existence entry", () => {
-      const filePath = resolve(source, "valid-json");
-      const entry = "./src/b.ts";
-
-      const res = validateAccess({ dir: filePath, entry });
-
-      expect(res).to.deep.equal({
-        dir: filePath,
-        subDir: "",
-        isJsonValid: true,
-
-        srcName: "",
-        entry,
-        entryDir: "",
-        name: "b",
-        isEntryValid: false,
-        ext: "ts",
-      });
-    });
-
-    it("Entry folder/lib with an extension", () => {
-      const filePath = resolve(source, "valid-json-entry-lib");
-      const entry = `lib${sep}a.js`;
-
-      const res = validateAccess({
-        dir: filePath,
-        entry,
-      });
-
-      expect(res).to.deep.equal({
-        dir: filePath,
-        subDir: "a.js",
-        isJsonValid: true,
-
-        srcName: "lib",
-        entry,
-        entryDir: "",
-        name: "a",
-        isEntryValid: true,
-        ext: "js",
-      });
-    });
-  });
-
   // describe("Testing with flat structure", () => {
 
   //   it("Multiple entries", () => {
