@@ -59,6 +59,8 @@ function normalizeInputToArray(input: string | string[]) {
 }
 
 function validate(dir: string, fName?: string): boolean {
+  console.log(fName ? path.resolve(dir, fName) : dir);
+  console.log(fs.existsSync);
   return fs.existsSync(fName ? path.resolve(dir, fName) : dir);
 }
 
