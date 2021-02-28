@@ -59,8 +59,6 @@ function normalizeInputToArray(input: string | string[]) {
 }
 
 function validate(dir: string, fName?: string): boolean {
-  console.log(fName ? path.resolve(dir, fName) : dir);
-  console.log(fs.existsSync);
   return fs.existsSync(fName ? path.resolve(dir, fName) : dir);
 }
 
@@ -224,14 +222,15 @@ function searchForExtInDir(
  */
 function detectFileInDir(
   dir: string,
-  extensions: string | string[] = DEFAULT_EXTENSIONS
+  extensions: string | string[] = DEFAULT_EXTENSIONS,
+  enableSearchForExt = true
 ) {
   const parsedSubDir = path.parse(dir);
   let isInsertExt = false;
 
   let includeValidEntry = false;
 
-  if (parsedSubDir.ext.length === 0) {
+  if (parsedSubDir.ext.length === 0 && enableSearchForExt) {
     // maybe :
     // to/src/b or  to/b or to
     parsedSubDir.ext = searchForExtInDir(dir, extensions);
@@ -245,11 +244,11 @@ function detectFileInDir(
       };
     }
 
-    includeValidEntry = validate(`${dir}.${parsedSubDir.ext}`);
+    includeValidEntry = fs.existsSync(`${dir}.${parsedSubDir.ext}`);
   } else if (parsedSubDir.ext.includes(".")) {
     [, parsedSubDir.ext] = parsedSubDir.ext.split(".");
 
-    includeValidEntry = validate(dir);
+    includeValidEntry = fs.existsSync(dir);
   }
 
   return {
