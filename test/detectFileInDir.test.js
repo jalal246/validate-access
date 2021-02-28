@@ -6,7 +6,7 @@ const { detectFileInDir } = require("../lib");
 
 const source = resolve(__dirname, "fixtures");
 
-describe("detectFileInDir", () => {
+describe.only("detectFileInDir", () => {
   const noResult = {
     includeValidEntry: false,
     ext: "",
