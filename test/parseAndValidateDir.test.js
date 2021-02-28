@@ -1,7 +1,7 @@
 // @ts-check
 
 const { expect } = require("chai");
-const { resolve, sep } = require("path");
+const { resolve } = require("path");
 
 const { parseAndValidateDir } = require("../lib");
 
@@ -18,6 +18,7 @@ describe("parseAndValidateDir", () => {
         dir: resolve(source),
         subDir: "valid-json",
         srcName: "",
+        includeSrcName: false,
         includeValidEntry: false,
         ext: "",
         name: "",
@@ -33,6 +34,37 @@ describe("parseAndValidateDir", () => {
         dir: resolve(source),
         subDir: "valid-json-entries-flat",
         srcName: "",
+        includeSrcName: false,
+        includeValidEntry: false,
+        ext: "",
+        name: "",
+      });
+    });
+
+    it("with a no source provided", () => {
+      const filePath = resolve(source, "valid-json-entry-lib");
+      const res = parseAndValidateDir({ dir: filePath });
+
+      expect(res).to.deep.equal({
+        dir: resolve(source),
+        subDir: "valid-json-entry-lib",
+        srcName: "src",
+        includeSrcName: false,
+        includeValidEntry: false,
+        ext: "",
+        name: "",
+      });
+    });
+
+    it("with a source provided", () => {
+      const filePath = resolve(source, "valid-json-entry-lib", "lib");
+      const res = parseAndValidateDir({ dir: filePath });
+
+      expect(res).to.deep.equal({
+        dir: resolve(source, "valid-json-entry-lib"),
+        subDir: "lib",
+        srcName: "lib",
+        includeSrcName: true,
         includeValidEntry: false,
         ext: "",
         name: "",
@@ -51,6 +83,7 @@ describe("parseAndValidateDir", () => {
         dir: expectedPath,
         subDir: "src",
         srcName: "src",
+        includeSrcName: true,
         includeValidEntry: false,
         ext: "",
         name: "",
@@ -67,6 +100,7 @@ describe("parseAndValidateDir", () => {
         dir: expectedPath,
         subDir: "lib",
         srcName: "lib",
+        includeSrcName: true,
         includeValidEntry: false,
         ext: "",
         name: "",
@@ -83,6 +117,7 @@ describe("parseAndValidateDir", () => {
         dir: resolve(source, "valid-json-entry-lib"),
         subDir,
         srcName: "",
+        includeSrcName: false,
         includeValidEntry: false,
         ext: "",
         name: "",
@@ -102,6 +137,7 @@ describe("parseAndValidateDir", () => {
         dir: expectedPath,
         subDir: "lib",
         srcName: "lib",
+        includeSrcName: true,
         includeValidEntry: true,
         ext: "ts",
         name: "b",
@@ -119,6 +155,7 @@ describe("parseAndValidateDir", () => {
         dir: expectedPath,
         subDir: `lib`,
         srcName: "lib",
+        includeSrcName: true,
         includeValidEntry: true,
         ext: "ts",
         name: "b",
@@ -134,6 +171,7 @@ describe("parseAndValidateDir", () => {
         dir: resolve(source, "valid-json-entry-lib", "test"),
         subDir: "b",
         srcName: "",
+        includeSrcName: false,
         includeValidEntry: false,
         ext: "",
         name: "",
@@ -149,6 +187,7 @@ describe("parseAndValidateDir", () => {
         dir: resolve(source, "valid-json-entry-lib"),
         subDir: "test",
         srcName: "",
+        includeSrcName: false,
         includeValidEntry: false,
         ext: "ts",
         name: "b",
@@ -164,6 +203,7 @@ describe("parseAndValidateDir", () => {
         dir: resolve(source, "valid-json-entry-lib"),
         subDir: "random",
         srcName: "",
+        includeSrcName: false,
         includeValidEntry: true,
         ext: "ts",
         name: "b",
@@ -184,6 +224,7 @@ describe("parseAndValidateDir", () => {
         dir: resolve(source, "valid-json-entry-lib"),
         subDir: "random",
         srcName: "",
+        includeSrcName: false,
         includeValidEntry: true,
         ext: "ts",
         name: "b",
@@ -199,6 +240,7 @@ describe("parseAndValidateDir", () => {
         dir: source,
         subDir: "valid-json-entries-flat",
         srcName: "",
+        includeSrcName: false,
         includeValidEntry: true,
         ext: "js",
         name: "a",
@@ -214,6 +256,7 @@ describe("parseAndValidateDir", () => {
         dir: resolve(source, "valid-json-entries-flat"),
         subDir: "x",
         srcName: "",
+        includeSrcName: false,
         includeValidEntry: false,
         ext: "",
         name: "",
@@ -229,6 +272,7 @@ describe("parseAndValidateDir", () => {
         dir: source,
         subDir: "valid-json-entries-flat",
         srcName: "",
+        includeSrcName: false,
         includeValidEntry: true,
         ext: "js",
         name: "a",
@@ -249,6 +293,7 @@ describe("parseAndValidateDir", () => {
         dir: resolve(source, "valid-json-entry-lib"),
         subDir: "random",
         srcName: "",
+        includeSrcName: false,
         includeValidEntry: true,
         ext: "ts",
         name: "b",

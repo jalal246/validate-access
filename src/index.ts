@@ -11,6 +11,7 @@ interface ParseDirOutput {
   dir: string;
   subDir: string;
   srcName: string;
+  includeSrcName: boolean;
   includeValidEntry: boolean;
   ext: string;
   name: string;
@@ -277,6 +278,7 @@ function parseAndValidateDir({
     return {
       dir,
       subDir: "",
+      includeSrcName: false,
       includeValidEntry: false,
       ext: "",
       name: "",
@@ -288,6 +290,8 @@ function parseAndValidateDir({
 
   const parsedDirWithValidFile = detectFileInDir(dir, extensions);
 
+  let includeSrcName = true;
+
   const { filename, ...resolvedDirFromSrc } = parseDir(
     dir,
     targetedFolders,
@@ -296,6 +300,7 @@ function parseAndValidateDir({
 
   if (resolvedDirFromSrc.srcName.length === 0 && isEnforceSrcLookup) {
     resolvedDirFromSrc.srcName = searchForSrcFolderInDir(dir, targetedFolders);
+    includeSrcName = false;
   }
 
   if (parsedDirWithValidFile.includeValidEntry) {
@@ -338,67 +343,11 @@ function parseAndValidateDir({
   }
 
   return {
+    includeSrcName,
     ...resolvedDirFromSrc,
     ...parsedDirWithValidFile,
   };
 }
-
-// interface resolveConflictedDirInput {
-//   dir: string;
-//   subDir: string;
-//   isSrc: boolean;
-//   srcName: string;
-// }
-
-// function resolveConflictedDir(
-//   mainDir: resolveConflictedDirInput,
-//   dirBranch: resolveConflictedDirInput,
-//   targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS
-// ) {
-//   const dirObj = mainDir;
-//   const entryObj = dirBranch;
-
-//   if (entryObj.isSrc) {
-//     if (!dirObj.isSrc) {
-//       dirObj.isSrc = true;
-//       dirObj.srcName = entryObj.srcName;
-
-//       if (dirObj.subDir.length === 0) {
-//         dirObj.subDir = entryObj.subDir;
-//       } else {
-//         dirObj.subDir += path.sep + entryObj.subDir;
-//       }
-//       entryObj.subDir = "";
-
-//       return { dir: dirObj, entry: entryObj };
-//     }
-
-//     if (entryObj.srcName === dirObj.srcName) {
-//       entryObj.isSrc = false;
-//       entryObj.srcName = "";
-
-//       return { dir: dirObj, entry: entryObj };
-//     }
-
-//     dirObj.srcName += path.sep + entryObj.srcName;
-//     dirObj.subDir += path.sep + entryObj.subDir;
-
-//     entryObj.isSrc = false;
-//     entryObj.srcName = "";
-//     entryObj.subDir = "";
-
-//     return { dir: dirObj, entry: entryObj };
-//   }
-
-//   if (!dirObj.isSrc) {
-//     ({ isSrc: dirObj.isSrc, srcName: dirObj.srcName } = searchForSrcFolderInDir(
-//       dirObj.dir,
-//       targetedFolders
-//     ));
-//   }
-
-//   return { dir: dirObj, entry: entryObj };
-// }
 
 function isDirHaSub(dir: string, subDir: string) {
   return (
@@ -421,8 +370,10 @@ function resolveActiveDir(
   let upgradeBaseDir = baseDir;
 
   if (isInsetSrc) {
-    const isSubDirHasSrc = isDirHaSub(subDir, dirSrcName);
-    const isEntryDirHasSrc = isDirHaSub(entryDir, dirSrcName);
+    const isSubDirHasSrc =
+      isDirHaSub(baseDir, dirSrcName) || isDirHaSub(subDir, dirSrcName);
+
+    const isEntryDirHasSrc = isDirHaSub(entryDir, entrySrcName);
 
     const mustInsetSrc = !isSubDirHasSrc && !isEntryDirHasSrc;
 
@@ -462,9 +413,11 @@ function validateAccess({
 
   // Discovered file inside dir?
   if (restDirInfo.ext.length > 0) {
+    const { includeSrcName, ...rest } = restDirInfo;
+
     return {
-      isJsonValid: isValidateJson ? validate(restDirInfo.dir, PKG_JSON) : null,
-      ...restDirInfo,
+      isJsonValid: isValidateJson ? validate(rest.dir, PKG_JSON) : null,
+      ...rest,
       entry: finalEntries[0],
       entryDir: "",
       isEntryValid: includeValidEntry,
@@ -477,15 +430,26 @@ function validateAccess({
     srcName: restDirInfo.srcName,
   };
 
+  let extractedSrcName = restDirInfo.srcName;
+
   // parsing entries
   const results: Entry[] = finalEntries.map((pureEntry) => {
     const entry = path.normalize(pureEntry);
 
     const parsedEntry = path.parse(entry);
 
+    /**
+     * Note: entry dir is always empty. `parseDir won't return any dir here.
+     * So, for entry sub dir is dir.
+     */
     const resolvedEntryFromSrc = parseDir(entry, targetedFolders);
 
-    let isInsetSrc = true;
+    if (resolvedEntryFromSrc.srcName.length > 0) {
+      extractedSrcName = resolvedEntryFromSrc.srcName;
+    }
+
+    let isInsetSrc =
+      !restDirInfo.includeSrcName && resolvedEntryFromSrc.srcName.length === 0;
 
     if (
       resolvedEntryFromSrc.subDir.length > 0 &&
@@ -500,7 +464,7 @@ function validateAccess({
       resolvedDir.dir,
       resolvedDir.subDir,
       resolvedDir.srcName,
-      resolvedEntryFromSrc.dir,
+      parsedEntry.dir,
       resolvedEntryFromSrc.srcName,
       isInsetSrc
     );
@@ -551,7 +515,7 @@ function validateAccess({
   return {
     dir: restDirInfo.dir,
     subDir: restDirInfo.subDir,
-    srcName: restDirInfo.srcName,
+    srcName: extractedSrcName,
     isJsonValid: isValidateJson ? validate(restDirInfo.dir, PKG_JSON) : null,
     ...(results.length === 1 ? results[0] : { entries: results }),
   };
