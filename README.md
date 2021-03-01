@@ -35,42 +35,16 @@ function parseDir(
 
 ### Example - `parseDir`
 
-Directory includes source folder
+Directory includes source folder and file name:
 
 ```js
-let result = parseDir("home/to/pkg/src");
+let result = parseDir("home/to/pkg/folder/src/a.js");
 
 result = {
   dir: "home/to/pkg",
-  subDir: "src",
+  subDir: "folder/src",
   srcName: "src",
-  filename: "",
-};
-```
-
-Basic directory:
-
-```js
-let result = parseDir("home/to/pkg/src");
-
-result = {
-  dir: "home/to/pkg",
-  subDir: "src",
-  srcName: "src",
-  filename: "",
-};
-```
-
-Directory includes a file:
-
-```js
-const result = parseDir("home/to/pkg/src/folder/myFile.js");
-
-result = {
-  dir: "home/to/pkg",
-  subDir: "src/folder",
-  srcName: "src",
-  filename: "myFile.js",
+  filename: "a.j",
 };
 ```
 
@@ -89,6 +63,9 @@ result = {
 ```
 
 ## detectFileInDir
+
+> Returns a valid file name with an extension for the given directory even if
+> the directory is missing file name extension.
 
 ```js
 // DEFAULT_EXTENSIONS= ["js", "ts", "jsx", "tsx"]
@@ -151,23 +128,23 @@ result = {
 function parseAndValidateDir(ParseDirInput): ParseDirOutput;
 ```
 
-Where `ParseDirInput` object contains:
+- `ParseDirInput` object contains:
 
-- `dir?: string`
-- `targetedFolders?: string | string[]` Default: `["src", "lib", "dist"]`
-- `extensions?: string | string[]` Default: `["js", "ts", "jsx", "tsx"]`
-- `isEnforceSub?: boolean`
-- `isEnforceSrcLookup?: boolean`
+  - `dir?: string`
+  - `targetedFolders?: string | string[]` Default: `["src", "lib", "dist"]`
+  - `extensions?: string | string[]` Default: `["js", "ts", "jsx", "tsx"]`
+  - `isEnforceSub?: boolean`
+  - `isEnforceSrcLookup?: boolean`
 
-Where `ParseDirOutput` object contains:
+- `ParseDirOutput` object contains:
 
-- `dir: string`
-- `subDir: string`
-- `srcName: string`
-- `includeSrcName: boolean`
-- `includeValidEntry: boolean`
-- `ext: string`
-- `name: string`
+  - `dir: string`
+  - `subDir: string`
+  - `srcName: string`
+  - `includeSrcName: boolean`
+  - `includeValidEntry: boolean`
+  - `ext: string`
+  - `name: string`
 
 ### Example - `parseAndValidateDir`
 
@@ -310,6 +287,21 @@ Or you can provide dir like the following and still get true validation:
 
 Doing multiple entries is also possible:
 
+```bash
+├─pkg
+│
+├───src
+│   ├───bar.ts
+│   └───foo.js
+│
+├───random
+│   ├───foobar.ts
+│
+├───index.js
+├───package.json
+
+```
+
 ```js
 const filePath = resolve(source, "valid-json-entries-src");
 
@@ -327,7 +319,7 @@ result = {
       entryDir: "",
       name: "foo",
       ext: "js",
-      isEntryValid: true,
+      isEntryValid: false,
     },
     {
       entry: "src/bar.ts",
@@ -341,11 +333,15 @@ result = {
       entryDir: "",
       name: "index",
       ext: "js",
-      isEntryValid: false,
+      isEntryValid: true,
     },
   ],
 };
 ```
+
+If `enableFoldersLookup` is enabled validation will always be done inside
+subdirectories. Otherwise, it will combine entry with directory ignore diving
+into src/lib..etc.
 
 ## Test
 

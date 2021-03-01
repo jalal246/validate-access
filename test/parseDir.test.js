@@ -238,6 +238,26 @@ describe("parseDir", () => {
       });
     });
 
+    it("With a valid sub dir and src name and file", () => {
+      const expectedPath = resolve(source, "valid-json-entry-lib");
+      const filePath = resolve(
+        source,
+        "valid-json-entry-lib",
+        "lib",
+        "random",
+        "a.ts"
+      );
+
+      const res = parseDir(filePath);
+
+      expect(res).to.deep.equal({
+        dir: expectedPath,
+        subDir: `lib${sep}random`,
+        filename: "a.ts",
+        srcName: "lib",
+      });
+    });
+
     it("With a valid sub dir and src name", () => {
       const expectedPath = resolve(source, "valid-json-entry-lib");
       const filePath = resolve(
