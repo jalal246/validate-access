@@ -242,11 +242,11 @@ function detectFileInDir(
       };
     }
 
-    includeValidEntry = fs.existsSync(`${dir}.${parsedSubDir.ext}`);
+    includeValidEntry = validate(`${dir}.${parsedSubDir.ext}`);
   } else if (parsedSubDir.ext.includes(".")) {
     [, parsedSubDir.ext] = parsedSubDir.ext.split(".");
 
-    includeValidEntry = fs.existsSync(dir);
+    includeValidEntry = validate(dir);
   }
 
   return {
@@ -478,7 +478,7 @@ function validateAccess({
         `${parsedEntry.name}.${parsedEntry.ext}`
       );
 
-      isEntryValid = fs.existsSync(resolvedPath);
+      isEntryValid = validate(resolvedPath);
     } else {
       for (let j = 0; j < extensions.length; j += 1) {
         const resolvedPath = path.resolve(
@@ -486,7 +486,7 @@ function validateAccess({
           `${parsedEntry.name}.${extensions[j]}`
         );
 
-        isEntryValid = fs.existsSync(resolvedPath);
+        isEntryValid = validate(resolvedPath);
 
         if (isEntryValid) {
           parsedEntry.ext = extensions[j];
