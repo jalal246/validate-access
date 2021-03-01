@@ -14,7 +14,7 @@ npm install validate-access
 - [parseAndValidateDir](#arseAndValidateDir)
 - [validateAccess](#validateAccess)
 
-### parseDir
+## parseDir
 
 > Parse a given directory without validation
 
@@ -88,7 +88,7 @@ result = {
 };
 ```
 
-### detectFileInDir
+## detectFileInDir
 
 ```js
 // DEFAULT_EXTENSIONS= ["js", "ts", "jsx", "tsx"]
@@ -143,7 +143,7 @@ result = {
 };
 ```
 
-### parseAndValidateDir
+## parseAndValidateDir
 
 > Parse and validate a given directory
 
@@ -223,7 +223,7 @@ result = {
 };
 ```
 
-### validateAccess
+## validateAccess
 
 Validates package accessibility including package.json and entry file or
 multiple entries. It doesn't just check for string format, it actually goes
