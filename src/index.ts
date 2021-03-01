@@ -1,5 +1,3 @@
-/// <reference types="node" />
-
 import fs from "fs";
 import path from "path";
 
@@ -245,10 +243,15 @@ function detectFileInDir(
     }
 
     includeValidEntry = fs.existsSync(`${dir}.${parsedSubDir.ext}`);
+    console.log(
+      "file: index.ts ~ line 246 ~ `${dir}.${parsedSubDir.ext}`",
+      `${dir}.${parsedSubDir.ext}`
+    );
   } else if (parsedSubDir.ext.includes(".")) {
     [, parsedSubDir.ext] = parsedSubDir.ext.split(".");
 
     includeValidEntry = fs.existsSync(dir);
+    console.log("file: index.ts ~ line 254 ~ dir", dir);
   }
 
   return {
