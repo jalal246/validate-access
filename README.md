@@ -21,7 +21,7 @@ npm install validate-access
 ```ts
 // DEFAULT_DIR_FOLDERS = ["src", "lib", "dist"];
 
-parseDir(
+function parseDir(
   pureDir: string,
   targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS,
   isEnforceSub: boolean = true
