@@ -18,7 +18,7 @@ npm install validate-access
 
 > Parse a given directory without validation
 
-```ts
+```js
 // DEFAULT_DIR_FOLDERS = ["src", "lib", "dist"];
 
 function parseDir(
@@ -90,7 +90,7 @@ result = {
 
 ### detectFileInDir
 
-```ts
+```js
 // DEFAULT_EXTENSIONS= ["js", "ts", "jsx", "tsx"]
 
 function detectFileInDir(
@@ -147,7 +147,7 @@ result = {
 
 > Parse and validate a given directory
 
-```ts
+```js
 function parseAndValidateDir(ParseDirInput): ParseDirOutput;
 ```
 
