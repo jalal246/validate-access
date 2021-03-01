@@ -18,19 +18,8 @@ npm install validate-access
 
 > Parse a given directory without validation
 
-```ts
+```js
 // DEFAULT_DIR_FOLDERS = ["src", "lib", "dist"];
-
-function parseDir(
-  pureDir: string,
-  targetedFolders?: string[] | string,
-  isEnforceSub?: boolean
-): {
-  dir: string;
-  subDir: string;
-  filename: string;
-  srcName: string;
-};
 
 function parseDir(
   pureDir: string,
@@ -104,7 +93,7 @@ result = {
 ```js
 // DEFAULT_EXTENSIONS= ["js", "ts", "jsx", "tsx"]
 
-detectFileInDir(
+function detectFileInDir(
   dir: string,
   extensions: string | string[] = DEFAULT_EXTENSIONS,
   enableSearchForExt = true
@@ -159,34 +148,34 @@ result = {
 > Parse and validate a given directory
 
 ```js
-parseAndValidateDir(ParseDirInput): ParseDirOutput;
+function parseAndValidateDir(ParseDirInput): ParseDirOutput;
 ```
 
 Where `ParseDirInput` object contains:
 
-`dir?: string`
-`targetedFolders?: string | string[]` Default: `["src", "lib", "dist"]`
-`extensions?: string | string[]` Default: `["js", "ts", "jsx", "tsx"]`
-`isEnforceSub?: boolean`
-`isEnforceSrcLookup?: boolean`
+- `dir?: string`
+- `targetedFolders?: string | string[]` Default: `["src", "lib", "dist"]`
+- `extensions?: string | string[]` Default: `["js", "ts", "jsx", "tsx"]`
+- `isEnforceSub?: boolean`
+- `isEnforceSrcLookup?: boolean`
 
 Where `ParseDirOutput` object contains:
 
-`dir: string`
-`subDir: string`
-`srcName: string`
-`includeSrcName: boolean`
-`includeValidEntry: boolean`
-`ext: string`
-`name: string`
+- `dir: string`
+- `subDir: string`
+- `srcName: string`
+- `includeSrcName: boolean`
+- `includeValidEntry: boolean`
+- `ext: string`
+- `name: string`
 
 ### Example - `parseAndValidateDir`
 
 Assuming we have:
 
-├─pkg
-├───src
-│ ├───bar.ts
+├─pkg  
+├───src  
+│ ├───bar.ts  
 │ └───foo.js
 
 ```js
