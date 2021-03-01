@@ -230,154 +230,118 @@ multiple entries. It doesn't just check for string format, it actually goes
 deeper to check for valid extension and then validate existence.
 
 ```js
-validateAccess({
-  dir?: string, // default: .
-  entry?: string|string[],
-  srcName? :string, // default: src
-  isValidateJson? :boolean, // default: true
-  extension?: string[] // default: ["js", "ts"];
-})
+
+function validateAccess({
+  dir,
+  entry = "index",
+  targetedFolders = DEFAULT_DIR_FOLDERS,
+  extensions = DEFAULT_EXTENSIONS,
+  isValidateJson = true,
+}): ValidationOneEntry | ValidationMulti
 ```
 
 The result object depends on input.
 
-For one entry it returns:
+For one entry it returns `ValidationOneEntry`:
 
+- `dir: string`
+- `subDir: string`
 - `isJsonValid: boolean | null` - true if dir has package.json.
-- `isSrc: boolean` - true if there's src folder.
-- `isEntryValid: boolean` - if given entry is exist.
-- `entry: string` - entry file name that was checked.
-- `entryExt: string` - entry extension if exist.
+- `srcName: string` - If there's src folder recognized.
 
-And for multi entries:
+with `EntryInfo`:
 
-- `isJsonValid` and `isSrc` (same as above).
-- `entries: Array <EntryValidateInfo>`
-  - `isEntryValid: boolean` - if given entry is exist.
-  - `entry: string` - entry file name that was checked.
-  - `entryExt: string` - entry extension if exist.
+- `isEntryValid: boolean` - if the given entry is exist.
+- `entry: string` - the input entry.
+- `entryDir: string` - extracted entry directory.
+- `ext: string` - entry extension if exist.
+- `name: string` - entry file name that was checked.
 
-### Example - One Entry
+And for multi entries `entries: [EntryInfo]`
 
-```js
-import { validateAccess } from "validate-access";
-
-// ├───package.json
-// ├───src
-// │   ├───index.js
-// │   └───foo.js
-
-const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
-  dir: "path/to/valid/package",
-});
-
->
-
-{ isJsonValid: true, isSrc: true, entry: "index", isEntryValid: true, entryExt: "js" }
+```bash
+├─pkg
+│
+├───src
+│   ├───bar.ts
+│   └───foo.js
+│
+├───random
+│   ├───foobar.ts
+│
+├───package.json
 ```
 
-It works with different form of entry. So, `isEntryValid: true` in all the
-following cases:  
+### Example - `validateAccess`
+
+```js
+const result = validateAccess({
+  dir: "home/to/pkg",
+  entry: "random/foobar.ts",
+});
+
+result = {
+  dir: "home/to/pkg",
+  subDir: "",
+  entry: "random/foobar.ts",
+  entryDir: "random",
+  isJsonValid: true,
+  srcName: "src",
+  isEntryValid: true,
+  name: "foo",
+  ext: "js",
+};
+```
+
+You will get the same result for `entry: "random/foobar"` - without extension.
+
+Assuming the dir `"home/to/pkg"`, all the following entries are valid:
+
 `entry: "src/foo"`  
 `entry: "src/foo.js"`  
 `entry: "foo.js"`  
-`entry: "foo"`  
+`entry: "foo"`
+
+Or you can provide dir like the following and still get true validation:
+
 `dir: "path/to/valid/package/src/foo"`  
 `dir: "path/to/valid/package/src/foo.js"`
 
-### Example - Different Entry Form
+Doing multiple entries is also possible:
 
 ```js
-import { validateAccess } from "validate-access";
+const filePath = resolve(source, "valid-json-entries-src");
 
-// ├───package.json
-// ├───src
-// │   ├───index.js
-// │   └───foo.js
-
-const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
-  dir: "path/to/valid/package",
-  entry: "src/foo.js",
+const result = validateAccess({
+  dir: "to/pkg",
+  entry: ["foo", "src/bar.ts", "index.js"],
 });
 
->
-
-{ isJsonValid: true, isSrc: true, entry: "foo", isEntryValid: true, entryExt: "js" }
-```
-
-### Example - Custom Entry
-
-```js
-import { validateAccess } from "validate-access";
-
-// ├───index.json
-// ├───foo.ts
-
-const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
-  dir: "path/to/valid/package",
-  entry: "foo",
-});
-
->
-  {
-    isJsonValid: false,
-    isSrc: false,
-    entry: "foo",
-    entryExt: "ts"
-    isEntryValid: true,
-  }
-```
-
-You will get the same result using:
-
-```js
-const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
-  dir: "path/to/valid/package/foo",
-});
-```
-
-Or
-
-```js
-const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
-  dir: "path/to/valid/package/foo.ts",
-});
-```
-
-### Example - Multi Entries
-
-```js
-import { validateAccess } from "validate-access";
-
-// ├───src
-// │   ├───bar.ts
-// │   └───foo.js
-
-const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
-  dir: "path/to/valid/package",
-  entry: ["bar", "foo", "foobar"],
-});
-
->
-  isJsonValid: false,
-  isSrc: true,
+result = {
   entries: [
     {
-      entry: "bar",
-      entryExt: "ts",
-      isEntryValid: true,
-    },
-    {
       entry: "foo",
-      entryExt: "js",
+      entryDir: "",
+      name: "foo",
+      ext: "js",
       isEntryValid: true,
     },
     {
-      entry: "foobar",
-      entryExt: "",
+      entry: "src/bar.ts",
+      entryDir: "src",
+      name: "bar",
+      ext: "ts",
+      isEntryValid: true,
+    },
+    {
+      entry: "index",
+      entryDir: "",
+      name: "index",
+      ext: "",
       isEntryValid: false,
     },
   ],
+};
 ```
 
 ## Test
