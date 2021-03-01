@@ -1,4 +1,5 @@
 // @ts-check
+
 const { expect } = require("chai");
 const { resolve, sep } = require("path");
 
@@ -60,6 +61,26 @@ describe("parseDir", () => {
         dir: expectedPath,
         subDir: "lib",
         filename: "",
+        srcName: "lib",
+      });
+    });
+
+    it("with lib folder and sub dir", () => {
+      const expectedPath = resolve(source, "valid-json-entry-lib");
+      const filePath = resolve(
+        source,
+        "valid-json-entry-lib",
+        "lib",
+        "random",
+        "a.js"
+      );
+
+      const res = parseDir(filePath);
+
+      expect(res).to.deep.equal({
+        dir: expectedPath,
+        subDir: `lib${sep}random`,
+        filename: "a.js",
         srcName: "lib",
       });
     });
@@ -213,6 +234,26 @@ describe("parseDir", () => {
         dir: expectedPath,
         subDir: `lib${sep}random`,
         filename: "",
+        srcName: "lib",
+      });
+    });
+
+    it("With a valid sub dir and src name and file", () => {
+      const expectedPath = resolve(source, "valid-json-entry-lib");
+      const filePath = resolve(
+        source,
+        "valid-json-entry-lib",
+        "lib",
+        "random",
+        "a.ts"
+      );
+
+      const res = parseDir(filePath);
+
+      expect(res).to.deep.equal({
+        dir: expectedPath,
+        subDir: `lib${sep}random`,
+        filename: "a.ts",
         srcName: "lib",
       });
     });
