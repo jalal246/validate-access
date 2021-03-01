@@ -25,6 +25,7 @@ interface ParseDirInput {
 
 interface ValidateAccessInput extends ParseDirInput {
   isValidateJson?: boolean;
+  enableFoldersLookup?: boolean;
   entry?: string | string[];
 }
 
@@ -398,6 +399,7 @@ function validateAccess({
   targetedFolders = DEFAULT_DIR_FOLDERS,
   extensions = DEFAULT_EXTENSIONS,
   isValidateJson = true,
+  enableFoldersLookup = true,
 }: ValidateAccessInput): ValidationOneEntry | ValidationMulti {
   const parsedDir = parseAndValidateDir({
     dir: inputDir,
@@ -448,9 +450,12 @@ function validateAccess({
     }
 
     let isInsetSrc =
-      !restDirInfo.includeSrcName && resolvedEntryFromSrc.srcName.length === 0;
+      enableFoldersLookup &&
+      !restDirInfo.includeSrcName &&
+      resolvedEntryFromSrc.srcName.length === 0;
 
     if (
+      isInsetSrc &&
       resolvedEntryFromSrc.subDir.length > 0 &&
       resolvedEntryFromSrc.srcName.length === 0 &&
       resolvedEntryFromSrc.filename.length > 0

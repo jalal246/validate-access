@@ -237,6 +237,7 @@ function validateAccess({
   targetedFolders = DEFAULT_DIR_FOLDERS,
   extensions = DEFAULT_EXTENSIONS,
   isValidateJson = true,
+  enableFoldersLookup= true
 }): ValidationOneEntry | ValidationMulti
 ```
 
@@ -315,6 +316,7 @@ const filePath = resolve(source, "valid-json-entries-src");
 const result = validateAccess({
   dir: "to/pkg",
   entry: ["foo", "src/bar.ts", "index.js"],
+  enableFoldersLookup: false,
 });
 
 result = {
@@ -372,3 +374,5 @@ This project is licensed under the [GPL-3.0 License](https://github.com/jalal246
 - [textics](https://github.com/jalal246/textics) &
   [textics-stream](https://github.com/jalal246/textics-stream) - Counts lines,
   words, chars and spaces for a given string.
+
+> Support this package by giving it a Star ⭐

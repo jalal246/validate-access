@@ -773,4 +773,45 @@ describe("Validate Access", () => {
       });
     });
   });
+
+  describe("Validate flat files in a structured dir", () => {
+    it("With a valid file", () => {
+      const filePath = resolve(source, "valid-json-entry-lib");
+      const res = validateAccess({
+        dir: filePath,
+        entry: ["index.ts", "foo.js", "src/index.js"],
+        enableFoldersLookup: false,
+      });
+
+      expect(res).to.deep.equal({
+        dir: filePath,
+        subDir: "",
+        isJsonValid: true,
+        srcName: "src",
+        entries: [
+          {
+            entry: "index.ts",
+            entryDir: "",
+            name: "index",
+            ext: "ts",
+            isEntryValid: true,
+          },
+          {
+            entry: "foo.js",
+            entryDir: "",
+            name: "foo",
+            ext: "js",
+            isEntryValid: true,
+          },
+          {
+            entry: "src/index.js",
+            entryDir: "src",
+            name: "index",
+            ext: "js",
+            isEntryValid: true,
+          },
+        ],
+      });
+    });
+  });
 });
