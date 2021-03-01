@@ -173,10 +173,12 @@ Where `ParseDirOutput` object contains:
 
 Assuming we have:
 
-├─pkg  
-├───src  
-│ ├───bar.ts  
-│ └───foo.js
+```bash
+├─pkg
+├───src
+│   ├───bar.ts
+│   └───foo.js
+```
 
 ```js
 const result = parseAndValidateDir({ dir: "home/to/pkg" });
