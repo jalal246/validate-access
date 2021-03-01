@@ -244,6 +244,7 @@ function detectFileInDir(
 
     includeValidEntry = fs.existsSync(`${dir}.${parsedSubDir.ext}`);
     console.log(
+      includeValidEntry,
       "file: index.ts ~ line 246 ~ `${dir}.${parsedSubDir.ext}`",
       `${dir}.${parsedSubDir.ext}`
     );
@@ -251,7 +252,7 @@ function detectFileInDir(
     [, parsedSubDir.ext] = parsedSubDir.ext.split(".");
 
     includeValidEntry = fs.existsSync(dir);
-    console.log("file: index.ts ~ line 254 ~ dir", dir);
+    console.log("file: index.ts ~ line 254 ~ dir", includeValidEntry, dir);
   }
 
   return {
