@@ -318,6 +318,7 @@ const result = validateAccess({
 });
 
 result = {
+  ...essential,
   entries: [
     {
       entry: "foo",
@@ -337,7 +338,7 @@ result = {
       entry: "index",
       entryDir: "",
       name: "index",
-      ext: "",
+      ext: "js",
       isEntryValid: false,
     },
   ],
