@@ -119,7 +119,7 @@ result = {
 };
 ```
 
-This is also works:
+This also works:
 
 ```js
 const result = detectFileInDir("home/to/pkg/folder/myFile");
@@ -372,5 +372,3 @@ This project is licensed under the [GPL-3.0 License](https://github.com/jalal246
 - [textics](https://github.com/jalal246/textics) &
   [textics-stream](https://github.com/jalal246/textics-stream) - Counts lines,
   words, chars and spaces for a given string.
-
-- [folo](https://github.com/jalal246/folo) - Form & Layout Components Built with React.
