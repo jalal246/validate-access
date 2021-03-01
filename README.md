@@ -1,13 +1,225 @@
 # validate-access
 
-> The only function which is crazy enough to validate project accessibility
-> files in all possible means - literally.
+> Utility functions, parse, validate and extract data for a given directory with
+> multiple entries.
 
 ```bash
 npm install validate-access
 ```
 
 ## API
+
+- [parseDir](###parseDir)
+- [detectFileInDir](###detectFileInDir)
+- [parseAndValidateDir](###parseAndValidateDir)
+- [validateAccess](#dockerfilevim)
+
+### parseDir
+
+> Parse a given directory without validation
+
+```ts
+// DEFAULT_DIR_FOLDERS = ["src", "lib", "dist"];
+
+function parseDir(
+  pureDir: string,
+  targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS,
+  isEnforceSub: boolean = true
+): {
+  dir: string;
+  subDir: string;
+  filename: string;
+  srcName: string;
+};
+```
+
+### Example - `parseDir`
+
+Directory includes source folder
+
+```js
+let result = parseDir("home/to/pkg/src");
+
+result = {
+  dir: "home/to/pkg",
+  subDir: "src",
+  srcName: "src",
+  filename: "",
+};
+```
+
+Basic directory:
+
+```js
+let result = parseDir("home/to/pkg/src");
+
+result = {
+  dir: "home/to/pkg",
+  subDir: "src",
+  srcName: "src",
+  filename: "",
+};
+```
+
+Directory includes a file:
+
+```js
+const result = parseDir("home/to/pkg/src/folder/myFile.js");
+
+result = {
+  dir: "home/to/pkg",
+  subDir: "src/folder",
+  srcName: "src",
+  filename: "myFile.js",
+};
+```
+
+Custom source folders:
+
+```js
+// You can pass an array or a string
+const result = parseDir("home/to/pkg/test/folder/myFile.js", "test");
+
+result = {
+  dir: "home/to/pkg",
+  subDir: "test/folder",
+  srcName: "test",
+  filename: "myFile.js",
+};
+```
+
+### detectFileInDir
+
+```ts
+// DEFAULT_EXTENSIONS= ["js", "ts", "jsx", "tsx"]
+
+function detectFileInDir(
+  dir: string,
+  extensions: string | string[] = DEFAULT_EXTENSIONS,
+  enableSearchForExt = true
+): {
+  includeValidEntry: boolean;
+  ext: string;
+  name: string;
+};
+```
+
+When `enableSearchForExt` the function will add extensions to your directory
+and try to validate the output.
+
+### Example - `detectFileInDir`
+
+```js
+const result = detectFileInDir("home/to/pkg/folder/myFile.js");
+
+result = {
+  includeValidEntry: true,
+  name: "myFile",
+  ext: "js",
+};
+```
+
+This is also works:
+
+```js
+const result = detectFileInDir("home/to/pkg/folder/myFile");
+
+result = {
+  includeValidEntry: true,
+  name: "myFile",
+  ext: "js",
+};
+```
+
+No valid file:
+
+```js
+const result = detectFileInDir("home/to/pkg/test/folder");
+
+result = {
+  includeValidEntry: false,
+  name: "",
+  ext: "",
+};
+```
+
+### parseAndValidateDir
+
+> Parse and validate a given directory
+
+```ts
+function parseAndValidateDir(ParseDirInput): ParseDirOutput;
+```
+
+Where `ParseDirInput` object contains:
+
+`dir?: string`
+`targetedFolders?: string | string[]` Default: `["src", "lib", "dist"]`
+`extensions?: string | string[]` Default: `["js", "ts", "jsx", "tsx"]`
+`isEnforceSub?: boolean`
+`isEnforceSrcLookup?: boolean`
+
+Where `ParseDirOutput` object contains:
+
+`dir: string`
+`subDir: string`
+`srcName: string`
+`includeSrcName: boolean`
+`includeValidEntry: boolean`
+`ext: string`
+`name: string`
+
+### Example - `parseAndValidateDir`
+
+Assuming we have:
+
+├─pkg
+├───src
+│ ├───bar.ts
+│ └───foo.js
+
+```js
+const result = parseAndValidateDir({ dir: "home/to/pkg" });
+
+result = {
+  subDir: "valid-json-entry-lib",
+  srcName: "src", // Auto detected
+  includeSrcName: false,
+  includeValidEntry: false,
+  ext: "",
+  name: "",
+};
+```
+
+If Directory has a srcName:
+
+```js
+const result = parseAndValidateDir({ dir: "home/to/pkg/src" });
+
+result = {
+  subDir: "valid-json-entry-lib",
+  srcName: "src", // Auto detected
+  includeSrcName: true,
+  includeValidEntry: false,
+  ext: "",
+  name: "",
+};
+```
+
+With a file name provided:
+
+```js
+const result = parseAndValidateDir({ dir: "home/to/pkg/src/foo.js" });
+
+result = {
+  subDir: "valid-json-entry-lib",
+  srcName: "src", // Auto detected
+  includeSrcName: true,
+  includeValidEntry: true,
+  name: "foo",
+  ext: "js",
+};
+```
 
 ### validateAccess
 
