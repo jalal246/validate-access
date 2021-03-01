@@ -23,6 +23,17 @@ npm install validate-access
 
 function parseDir(
   pureDir: string,
+  targetedFolders?: string[] | string,
+  isEnforceSub?: boolean
+): {
+  dir: string;
+  subDir: string;
+  filename: string;
+  srcName: string;
+};
+
+function parseDir(
+  pureDir: string,
   targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS,
   isEnforceSub: boolean = true
 ): {
