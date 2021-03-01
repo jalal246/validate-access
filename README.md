@@ -9,10 +9,10 @@ npm install validate-access
 
 ## API
 
-- [parseDir](###parseDir)
-- [detectFileInDir](###detectFileInDir)
-- [parseAndValidateDir](###parseAndValidateDir)
-- [validateAccess](#dockerfilevim)
+- [parseDir](#parseDir)
+- [detectFileInDir](#detectFileInDir)
+- [parseAndValidateDir](#arseAndValidateDir)
+- [validateAccess](#validateAccess)
 
 ### parseDir
 
@@ -21,7 +21,7 @@ npm install validate-access
 ```js
 // DEFAULT_DIR_FOLDERS = ["src", "lib", "dist"];
 
-function parseDir(
+parseDir(
   pureDir: string,
   targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS,
   isEnforceSub: boolean = true
@@ -93,7 +93,7 @@ result = {
 ```js
 // DEFAULT_EXTENSIONS= ["js", "ts", "jsx", "tsx"]
 
-function detectFileInDir(
+detectFileInDir(
   dir: string,
   extensions: string | string[] = DEFAULT_EXTENSIONS,
   enableSearchForExt = true
@@ -148,7 +148,7 @@ result = {
 > Parse and validate a given directory
 
 ```js
-function parseAndValidateDir(ParseDirInput): ParseDirOutput;
+parseAndValidateDir(ParseDirInput): ParseDirOutput;
 ```
 
 Where `ParseDirInput` object contains:
