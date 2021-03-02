@@ -1,7 +1,6 @@
 # validate-access
 
-> Utility functions, parse, validate and extract data for a given directory with
-> multiple entries.
+> Utility functions, parse and validate a given directory with multiple entries.
 
 ```bash
 npm install validate-access
