@@ -1,7 +1,6 @@
 # validate-access
 
-> The only function which is crazy enough to validate project accessibility
-> files in all possible means - literally.
+> Utility functions, parse and validate a given directory with multiple entries.
 
 ```bash
 npm install validate-access
@@ -9,128 +8,339 @@ npm install validate-access
 
 ## API
 
-### validateAccess
+- [parseDir](#parseDir)
+- [detectFileInDir](#detectFileInDir)
+- [parseAndValidateDir](#arseAndValidateDir)
+- [validateAccess](#validateAccess)
 
-Validates package accessibility including package.json and entry/entries.
+## parseDir
+
+> Parse a given directory without validation
 
 ```js
-validateAccess({
-dir?: string, // default: .
-entry?: string|Array, // default: index
-srcName? :string, // default: src
-isValidateJson? :boolean // default: true
-extension?: string[] // default: ["js", "ts"];
-})
+// DEFAULT_DIR_FOLDERS = ["src", "lib", "dist"];
+
+function parseDir(
+  pureDir: string,
+  targetedFolders: string[] | string = DEFAULT_DIR_FOLDERS,
+  isEnforceSub: boolean = true
+): {
+  dir: string;
+  subDir: string;
+  filename: string;
+  srcName: string;
+};
 ```
 
-The result object depends on input. for one entry:
+### Example - `parseDir`
 
-- `isJsonValid: boolean` - true if dir has package.json
-- `isSrc: boolean` - true if there's src folder.
-- `isEntryValid: boolean` - if given entry is exist.
-- `entry: string` - entry name.
-- `entryExt: string|null` - entry extension if exist.
-
-And for multi entries:
-
-- `isJsonValid` and `isSrc` (same as above).
-- `isEntryValid: Array <entryValidateInfo>`
-  - `entry: string` - entry name.
-  - `isValid: boolean` - true if entry is valid.
-  - `entryExt: string|null` - entry extension if exist.
-
-### Example - One Entry
+Directory includes source folder and file name:
 
 ```js
-import { validateAccess } from "validate-access";
+let result = parseDir("home/to/pkg/folder/src/a.js");
 
-// ├───package.json
-// ├───src
-// │   ├───index.js
-// │   └───foo.js
+result = {
+  dir: "home/to/pkg",
+  subDir: "folder/src",
+  srcName: "src",
+  filename: "a.j",
+};
+```
 
-const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
-  dir: "path/to/valid/package",
+Custom source folders:
+
+```js
+// You can pass an array or a string
+const result = parseDir("home/to/pkg/test/folder/myFile.js", "test");
+
+result = {
+  dir: "home/to/pkg",
+  subDir: "test/folder",
+  srcName: "test",
+  filename: "myFile.js",
+};
+```
+
+## detectFileInDir
+
+> Returns a valid file name with an extension for the given directory even if
+> the directory is missing file name extension.
+
+```js
+// DEFAULT_EXTENSIONS= ["js", "ts", "jsx", "tsx"]
+
+function detectFileInDir(
+  dir: string,
+  extensions: string | string[] = DEFAULT_EXTENSIONS,
+  enableSearchForExt = true
+): {
+  includeValidEntry: boolean;
+  ext: string;
+  name: string;
+};
+```
+
+When `enableSearchForExt` the function will add extensions to your directory
+and try to validate the output.
+
+### Example - `detectFileInDir`
+
+```js
+const result = detectFileInDir("home/to/pkg/folder/myFile.js");
+
+result = {
+  includeValidEntry: true,
+  name: "myFile",
+  ext: "js",
+};
+```
+
+This also works:
+
+```js
+const result = detectFileInDir("home/to/pkg/folder/myFile");
+
+result = {
+  includeValidEntry: true,
+  name: "myFile",
+  ext: "js",
+};
+```
+
+No valid file:
+
+```js
+const result = detectFileInDir("home/to/pkg/test/folder");
+
+result = {
+  includeValidEntry: false,
+  name: "",
+  ext: "",
+};
+```
+
+## parseAndValidateDir
+
+> Parse and validate a given directory
+
+```js
+function parseAndValidateDir(ParseDirInput): ParseDirOutput;
+```
+
+- `ParseDirInput` object contains:
+
+  - `dir?: string`
+  - `targetedFolders?: string | string[]` Default: `["src", "lib", "dist"]`
+  - `extensions?: string | string[]` Default: `["js", "ts", "jsx", "tsx"]`
+  - `isEnforceSub?: boolean`
+  - `isEnforceSrcLookup?: boolean`
+
+- `ParseDirOutput` object contains:
+
+  - `dir: string`
+  - `subDir: string`
+  - `srcName: string`
+  - `includeSrcName: boolean`
+  - `includeValidEntry: boolean`
+  - `ext: string`
+  - `name: string`
+
+### Example - `parseAndValidateDir`
+
+Assuming we have:
+
+```bash
+├─pkg
+├───src
+│   ├───bar.ts
+│   └───foo.js
+```
+
+```js
+const result = parseAndValidateDir({ dir: "home/to/pkg" });
+
+result = {
+  subDir: "valid-json-entry-lib",
+  srcName: "src", // Auto detected
+  includeSrcName: false,
+  includeValidEntry: false,
+  ext: "",
+  name: "",
+};
+```
+
+If Directory has a srcName:
+
+```js
+const result = parseAndValidateDir({ dir: "home/to/pkg/src" });
+
+result = {
+  subDir: "valid-json-entry-lib",
+  srcName: "src", // Auto detected
+  includeSrcName: true,
+  includeValidEntry: false,
+  ext: "",
+  name: "",
+};
+```
+
+With a file name provided:
+
+```js
+const result = parseAndValidateDir({ dir: "home/to/pkg/src/foo.js" });
+
+result = {
+  subDir: "valid-json-entry-lib",
+  srcName: "src", // Auto detected
+  includeSrcName: true,
+  includeValidEntry: true,
+  name: "foo",
+  ext: "js",
+};
+```
+
+## validateAccess
+
+Validates package accessibility including package.json and entry file or
+multiple entries. It doesn't just check for string format, it actually goes
+deeper to check for valid extension and then validate existence.
+
+```js
+
+function validateAccess({
+  dir,
+  entry = "index",
+  targetedFolders = DEFAULT_DIR_FOLDERS,
+  extensions = DEFAULT_EXTENSIONS,
+  isValidateJson = true,
+  enableFoldersLookup= true
+}): ValidationOneEntry | ValidationMulti
+```
+
+The result object depends on input.
+
+For one entry it returns `ValidationOneEntry`:
+
+- `dir: string`
+- `subDir: string`
+- `isJsonValid: boolean | null` - true if dir has package.json.
+- `srcName: string` - If there's src folder recognized.
+
+with `EntryInfo`:
+
+- `isEntryValid: boolean` - if the given entry is exist.
+- `entry: string` - the input entry.
+- `entryDir: string` - extracted entry directory.
+- `ext: string` - entry extension if exist.
+- `name: string` - entry file name that was checked.
+
+And for multi entries `entries: [EntryInfo]`
+
+```bash
+├─pkg
+│
+├───src
+│   ├───bar.ts
+│   └───foo.js
+│
+├───random
+│   ├───foobar.ts
+│
+├───package.json
+```
+
+### Example - `validateAccess`
+
+```js
+const result = validateAccess({
+  dir: "home/to/pkg",
+  entry: "random/foobar.ts",
 });
 
-// { isJsonValid: true, isSrc: true, entry: "index", isEntryValid: true, entryExt: "js" }
+result = {
+  dir: "home/to/pkg",
+  subDir: "",
+  entry: "random/foobar.ts",
+  entryDir: "random",
+  isJsonValid: true,
+  srcName: "src",
+  isEntryValid: true,
+  name: "foo",
+  ext: "js",
+};
 ```
 
-It works with different form of entry. So, `isEntryValid: true` in all the
-following cases:  
+You will get the same result for `entry: "random/foobar"` - without extension.
+
+Assuming the dir `"home/to/pkg"`, all the following entries are valid:
+
 `entry: "src/foo"`  
 `entry: "src/foo.js"`  
 `entry: "foo.js"`  
 `entry: "foo"`
 
-### Example - Different Entry Form
+Or you can provide dir like the following and still get true validation:
 
-```js
-import { validateAccess } from "validate-access";
+`dir: "path/to/valid/package/src/foo"`  
+`dir: "path/to/valid/package/src/foo.js"`
 
-// ├───package.json
-// ├───src
-// │   ├───index.js
-// │   └───foo.js
+Doing multiple entries is also possible:
 
-const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
-  dir: "path/to/valid/package",
-  entry: "src/foo.js",
-});
+```bash
+├─pkg
+│
+├───src
+│   ├───bar.ts
+│   └───foo.js
+│
+├───random
+│   ├───foobar.ts
+│
+├───index.js
+├───package.json
 
-// { isJsonValid: true, isSrc: true, entry: "foo", isEntryValid: true, entryExt: "js" }
 ```
 
-### Example - Custom Entry
-
 ```js
-import { validateAccess } from "validate-access";
+const filePath = resolve(source, "valid-json-entries-src");
 
-// ├───index.json
-// ├───foo.ts
-
-const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
-  dir: "path/to/valid/package",
-  entry: "foo",
+const result = validateAccess({
+  dir: "to/pkg",
+  entry: ["foo", "src/bar.ts", "index.js"],
+  enableFoldersLookup: false,
 });
 
-// { isJsonValid: false, isSrc: false, entry: "foo", isEntryValid: true, entryExt: "ts" }
+result = {
+  ...essential,
+  entries: [
+    {
+      entry: "foo",
+      entryDir: "",
+      name: "foo",
+      ext: "js",
+      isEntryValid: false,
+    },
+    {
+      entry: "src/bar.ts",
+      entryDir: "src",
+      name: "bar",
+      ext: "ts",
+      isEntryValid: true,
+    },
+    {
+      entry: "index",
+      entryDir: "",
+      name: "index",
+      ext: "js",
+      isEntryValid: true,
+    },
+  ],
+};
 ```
 
-### Example - Multi Entries
-
-```js
-import { validateAccess } from "validate-access";
-
-// ├───src
-// │   ├───bar.ts
-// │   └───foo.js
-
-const { isJsonValid, isSrc, entry, isEntryValid, entryExt } = validateAccess({
-  dir: "path/to/valid/package",
-  entry: ["bar", "foo", "foobar"],
-});
-
-// isJsonValid: false,
-// isSrc: true,
-// isEntryValid: [
-//   {
-//     entry: "bar",
-//     entryExt: "ts",
-//     isValid: true,
-//   },
-//   {
-//     entry: "foo",
-//     entryExt: "js",
-//     isValid: true,
-//   },
-//   {
-//     entry: "foobar",
-//     entryExt: null,
-//     isValid: false,
-//   },
-// ],
-```
+If `enableFoldersLookup` is enabled validation will always be done inside
+subdirectories. Otherwise, it will combine entry with directory ignore diving
+into src/lib..etc.
 
 ## Test
 
@@ -160,4 +370,4 @@ This project is licensed under the [GPL-3.0 License](https://github.com/jalal246
   [textics-stream](https://github.com/jalal246/textics-stream) - Counts lines,
   words, chars and spaces for a given string.
 
-- [folo](https://github.com/jalal246/folo) - Form & Layout Components Built with React.
+> Support this package by giving it a Star ⭐
